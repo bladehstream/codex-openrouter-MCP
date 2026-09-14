@@ -75,6 +75,9 @@ For skill-guided installation through the repository's Git marketplace, see
 [plugin installation](docs/plugin.md). The bundled `delegate-openrouter` skill
 teaches Codex how to route work, preserve the parent model's coordination role,
 verify delegate output, and use the approval-gated artifact workflow.
+If delegation prevents a new Codex task from starting or a Windows upgrade
+leaves a partial uv environment, follow the
+[troubleshooting runbook](docs/troubleshooting.md).
 
 ## License
 

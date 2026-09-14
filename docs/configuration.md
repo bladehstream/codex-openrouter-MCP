@@ -62,7 +62,10 @@ directory. Use an explicit `OPENROUTER_ARTIFACT_ROOT` instead when the MCP
 process does not start in the project directory.
 
 Restart ChatGPT desktop or begin a new CLI/IDE session, then use `/mcp` or
-`codex mcp list` to verify the server.
+`codex mcp list` to verify a directly configured server. Plugin-bundled MCP
+servers are best checked with `codex plugin list` and a fresh-session smoke
+test. See [Troubleshooting](troubleshooting.md) for the recovery and verification
+workflow.
 
 ## Windows
 

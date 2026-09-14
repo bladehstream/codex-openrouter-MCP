@@ -58,7 +58,8 @@ providers without another package or plugin update.
 ## Recover from a broken MCP installation
 
 The bundled MCP is intentionally optional. If Codex cannot start after an older
-plugin release or partial uv upgrade, first edit the effective Codex
+plugin release or partial uv upgrade, use the complete
+[troubleshooting runbook](troubleshooting.md). First edit the effective Codex
 `config.toml` and temporarily disable the plugin:
 
 ```toml
@@ -88,4 +89,5 @@ codex-openrouter-routes
 
 The last command must return a JSON-RPC result containing `serverInfo`; it may
 then exit when stdin closes. Upgrade/reinstall the marketplace plugin, set its
-enable flag back to `true`, reopen Codex, and start a new task.
+enable flag back to `true`, reopen Codex, and run the fresh-session smoke test
+in the troubleshooting runbook.
