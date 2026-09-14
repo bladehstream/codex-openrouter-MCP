@@ -47,10 +47,10 @@ output_token_limit = 16000
 output_token_limit = 16000
 ```
 
-CWD artifact mode locks the server to the Codex task's startup working
-directory and refuses a filesystem root or the user home directory. Use an
-explicit `OPENROUTER_ARTIFACT_ROOT` instead when the MCP process does not start
-in the project directory.
+CWD artifact mode locks artifact and selected-file review tools to the Codex
+task's startup working directory and refuses a filesystem root or the user home
+directory. Use an explicit `OPENROUTER_ARTIFACT_ROOT` instead when the MCP
+process does not start in the project directory.
 
 Restart ChatGPT desktop or begin a new CLI/IDE session, then use `/mcp` or
 `codex mcp list` to verify the server.
@@ -99,5 +99,20 @@ into the MCP process through a protected service environment or secret manager.
 
 Assign the desired OpenRouter guardrail to the dedicated API key or workspace.
 OpenRouter's maintained prompt-injection detector and sensitive-info controls
-then apply before provider forwarding. See `docs/safety-scanner.md` for the
-trust-boundary distinction and the optional local scanner interface.
+then apply after OpenRouter receives the request and before provider forwarding.
+The MCP does not create or verify this external configuration. See
+[content guardrails and optional local scanning](safety-scanner.md) for the
+trust-boundary distinction and optional local scanner interface.
+
+## Input limits
+
+- `delegate_task` and `start_task`: 200,000 task characters.
+- `review_files`: 1-100 unique files, 500 KB per file, 750 KB combined.
+- `prepare_artifact`: at most 20 input files and 10 output files.
+- Generated artifact output: 1 MB per file and 5 MB combined.
+
+`review_files` accepts UTF-8 text plus common source formats including Python,
+JavaScript/TypeScript, Java, C/C++, C#, Go, Rust, Kotlin, Swift, Ruby, PHP,
+Scala, shell, PowerShell, SQL, HTML/CSS, Vue, Svelte, XML, GraphQL, Protocol
+Buffers, notebooks, Markdown, JSON, YAML, TOML, CSV, and plain text. Binary or
+invalid UTF-8 input is rejected.

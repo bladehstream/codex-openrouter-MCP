@@ -24,16 +24,18 @@ unsafe active links, duplicate JSON keys, CSV formula cells, and YAML custom
 tags. File creation uses same-directory temporary files and atomic hard links so
 an existing destination is never replaced.
 
-Content filtering is delegated by default to guardrails assigned to the
-dedicated OpenRouter API key or workspace. Those guardrails run after content
-reaches OpenRouter and before it is forwarded to a model provider. OpenRouter's
-built-in sensitive-info presets do not currently claim to detect arbitrary API
-keys or credentials; configure custom filters there if that policy is required.
+Content filtering is delegated to any guardrails assigned to the dedicated
+OpenRouter API key or workspace. The MCP neither creates nor verifies those
+guardrails. When present, they run after content reaches OpenRouter and before
+it is forwarded to a model provider. OpenRouter's built-in sensitive-info
+presets do not currently claim to detect arbitrary API keys or credentials;
+configure custom filters there if that policy is required.
 
 Users who require pre-transmission scanning can install and configure a local
 scanner module with `OPENROUTER_SAFETY_SCANNER_MODULE`. The MCP fails closed if
 a configured module cannot load, errors, or returns an invalid result. See
-`docs/safety-scanner.md` for the extension contract.
+[content guardrails and optional local scanning](docs/safety-scanner.md) for the
+extension contract.
 
 MCP tool annotations are defense in depth, not the security boundary. Path,
 content, size, format, optional scanner, and routing policies are enforced

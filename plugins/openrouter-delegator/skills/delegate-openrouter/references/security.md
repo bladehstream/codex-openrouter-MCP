@@ -1,6 +1,6 @@
 # Security guidance
 
-Codex determines which context may be sent externally. The MCP server enforces routes, privacy flags, credential retrieval, and artifact path rules, but it cannot decide whether selected business or source content is appropriate to disclose. OpenRouter guardrails run after content reaches OpenRouter and before provider forwarding. A local scanner runs before transmission only when `list_profiles` reports that one is enabled.
+Codex determines which context may be sent externally. The MCP server enforces routes, privacy flags, credential retrieval, and artifact path rules, but it cannot decide whether selected business or source content is appropriate to disclose. Externally configured OpenRouter guardrails run after content reaches OpenRouter and before provider forwarding; the MCP cannot verify that one is assigned. A local scanner runs before transmission only when `list_profiles` reports that one is enabled.
 
 Before delegation:
 

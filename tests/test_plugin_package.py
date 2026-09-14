@@ -1,5 +1,6 @@
 import json
 import pathlib
+import re
 import unittest
 
 
@@ -52,6 +53,22 @@ class PluginPackageTests(unittest.TestCase):
         for path in PLUGIN_ROOT.rglob("*"):
             if path.is_file():
                 self.assertNotIn("[TODO:", path.read_text(encoding="utf-8"))
+
+    def test_documentation_relative_links_resolve(self):
+        markdown_files = [ROOT / "README.md", ROOT / "SECURITY.md"]
+        markdown_files.extend((ROOT / "docs").glob("*.md"))
+        markdown_files.extend((PLUGIN_ROOT / "skills").rglob("*.md"))
+        link_pattern = re.compile(r"(?<!!)\[[^]]+\]\(([^)]+)\)")
+        missing = []
+        for document in markdown_files:
+            for target in link_pattern.findall(document.read_text(encoding="utf-8")):
+                path_text = target.split("#", 1)[0]
+                if not path_text or "://" in path_text or path_text.startswith("mailto:"):
+                    continue
+                resolved = (document.parent / path_text).resolve()
+                if not resolved.exists():
+                    missing.append(f"{document.relative_to(ROOT)} -> {target}")
+        self.assertEqual(missing, [])
 
 
 if __name__ == "__main__":

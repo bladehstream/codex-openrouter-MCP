@@ -18,8 +18,8 @@ and prevents routing outside the configured provider list.
 - synchronous delegation;
 - selected-file review for up to 100 UTF-8 source and text files, limited to
   500 KB each and 750 KB combined;
-- OpenRouter workspace/API-key guardrails by default, with an optional
-  user-supplied local pre-transmission scanner module;
+- compatibility with externally configured OpenRouter workspace/API-key
+  guardrails, with an optional user-supplied local pre-transmission scanner;
 - in-memory asynchronous jobs, status, follow-up, result, and cancellation;
 - selected-file artifact preparation;
 - in-memory artifact preview with SHA-256 manifests;
@@ -30,41 +30,44 @@ and prevents routing outside the configured provider list.
 The artifact boundary does not provide external models with shell access,
 arbitrary file reads, source-tree writes, or existing-file replacement.
 
+OpenRouter guardrails are not provisioned or verified by this MCP. Without an
+optional local scanner, selected content reaches OpenRouter before any assigned
+OpenRouter guardrail evaluates it.
+
 ## Install for development
 
 ```bash
-python3 -m venv .venv
-python3 -m pip install -e .
+uv sync --python 3.11
 ```
 
 Run the server:
 
 ```bash
-codex-openrouter-mcp
+uv run codex-openrouter-mcp
 ```
 
-See `docs/configuration.md` for Codex setup and `SECURITY.md` for the current
-trust boundary.
+See [Codex configuration](docs/configuration.md) for setup and the
+[security policy](SECURITY.md) for the current trust boundary.
 
 For skill-guided installation through the repository's Git marketplace, see
-`docs/plugin.md`. The bundled `delegate-openrouter` skill teaches Codex how to
-route work, preserve the parent model's coordination role, verify delegate
-output, and use the approval-gated artifact workflow.
+[plugin installation](docs/plugin.md). The bundled `delegate-openrouter` skill
+teaches Codex how to route work, preserve the parent model's coordination role,
+verify delegate output, and use the approval-gated artifact workflow.
 
 ## Tests
 
 ```bash
-python3 -m unittest discover -s tests -p "test_*.py" -v
+uv run python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
 Paid live tests are intentionally excluded from CI:
 
 ```bash
-python3 tests/live_acceptance.py
+uv run python tests/live_acceptance.py
 ```
 
 ## Status
 
-Alpha. Context-only delegation and inert text artifacts are implemented and
-tested. Near-native repository exploration, patching, worktrees, and test
-execution are planned as separately gated capabilities.
+Alpha. Inline delegation, bounded selected-file review, and inert text artifacts
+are implemented and tested. Near-native repository exploration, patching,
+worktrees, and test execution are planned as separately gated capabilities.

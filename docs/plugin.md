@@ -4,13 +4,14 @@ The repository includes a Git marketplace manifest under `.agents/plugins` and i
 
 ## Runtime prerequisite
 
-Install the MCP package so `codex-openrouter-mcp` is available on `PATH`. From a clone of this repository, `pipx` is the recommended cross-platform option:
+Install the MCP package so `codex-openrouter-mcp` is available on `PATH`. From a clone of this repository, use uv's isolated tool environment:
 
 ```bash
-pipx install .
+uv tool install --python 3.11 .
+uv tool update-shell
 ```
 
-Alternatively, install into a dedicated virtual environment and put its scripts/bin directory on `PATH`. On Windows, use the Python launcher or interpreter name configured on that machine. Keep the OpenRouter key in the operating-system credential store as described in [configuration.md](configuration.md); the plugin does not contain or install credentials.
+Close and reopen the shell after the first `uv tool update-shell`. Alternatively, install into a dedicated virtual environment and put its scripts/bin directory on `PATH`. Keep the OpenRouter key in the operating-system credential store as described in [configuration.md](configuration.md); the plugin does not contain or install credentials.
 
 Verify the command before installing the plugin:
 
@@ -19,6 +20,9 @@ codex-openrouter-mcp
 ```
 
 The command waits for MCP input when healthy; end it with Ctrl+C.
+
+On Windows, `Get-Command codex-openrouter-mcp` should resolve to uv's tool-bin
+directory, normally under the user profile.
 
 ## Add the Git marketplace
 
@@ -33,10 +37,16 @@ If the MCP was previously configured directly under `[mcp_servers.openrouter_del
 
 ## Upgrade
 
+Close Codex desktop and any Codex CLI sessions using this plugin before
+replacing the uv tool environment. Windows locks the running MCP executable and
+otherwise causes `uv tool install --force` to fail with `Access is denied`.
+
 ```bash
+git pull --ff-only
 uv tool install --force --python 3.11 .
 codex plugin marketplace upgrade codex-openrouter-mcp
 codex plugin add openrouter-delegator@codex-openrouter-mcp
 ```
 
-Start a new task so updated skill instructions and MCP metadata are loaded.
+Verify `uv tool list` reports `codex-openrouter-mcp v0.2.1`, reopen Codex, and
+start a new task so updated skill instructions and MCP metadata are loaded.

@@ -12,9 +12,9 @@ source files under the locked workspace root, up to 500 KB per file and 750 KB
 combined. It applies traversal, link, sensitive-name, encoding, and optional
 local-scanner checks before transmitting content, and returns the reviewed paths, byte counts,
 SHA-256 hashes, and input-safety status with the model result. Content scanning
-is handled by OpenRouter guardrails by default. An optional user-supplied local
-scanner can run before transmission. It does not grant the model general
-filesystem access.
+is handled by any externally assigned OpenRouter guardrails. The MCP does not
+create or verify them. An optional user-supplied local scanner can run before
+transmission. It does not grant the model general filesystem access.
 
 ## Artifact delegation
 
@@ -42,7 +42,8 @@ Local pre-transmission filtering is disabled by default. Set
 `OPENROUTER_SAFETY_SCANNER_MODULE` to a separately installed Python module when
 an organization requires additional endpoint-local controls. The configured
 module is applied to selected inputs and generated artifact content and fails
-closed on load or execution errors. See `safety-scanner.md`.
+closed on load or execution errors. See
+[content guardrails and optional local scanning](safety-scanner.md).
 
 Preparation stores proposed bytes in memory. `preview_artifact` returns bounded
 excerpts and hashes. `commit_artifact` requires the exact manifest hash and
