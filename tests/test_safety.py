@@ -13,11 +13,26 @@ class SafetyScannerTests(unittest.TestCase):
         safety._load_scanner.cache_clear()
 
     def test_disabled_by_default(self) -> None:
-        with mock.patch.dict(os.environ, {safety.SCANNER_ENV: ""}, clear=False):
+        with mock.patch.dict(
+            os.environ,
+            {safety.SCANNER_ENV: "", safety.EXPECTED_GUARDRAIL_ENV: ""},
+            clear=False,
+        ):
             self.assertIsNone(safety.scan_text("password=literal-value", source="input"))
             status = safety.status()
         self.assertFalse(status["local_scanner_enabled"])
         self.assertIsNone(status["local_scanner_module"])
+        self.assertEqual(status["guardrail_status"], "unknown")
+
+    def test_expected_guardrail_is_reported_but_not_claimed_verified(self) -> None:
+        with mock.patch.dict(
+            os.environ,
+            {safety.EXPECTED_GUARDRAIL_ENV: "engineering-review"},
+            clear=False,
+        ):
+            status = safety.status()
+        self.assertEqual(status["expected_guardrail"], "engineering-review")
+        self.assertEqual(status["guardrail_status"], "configured_unverified")
 
     def test_configured_module_receives_text_and_source(self) -> None:
         module = mock.Mock()

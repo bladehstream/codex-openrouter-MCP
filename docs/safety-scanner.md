@@ -14,6 +14,11 @@ They are therefore provider-side controls, not endpoint-local data-loss
 prevention. The MCP cannot verify the guardrail configuration with an ordinary
 inference key and reports it as externally managed.
 
+Optionally set `OPENROUTER_EXPECTED_GUARDRAIL` to a guardrail label or ID that
+the operator expects to be assigned. `list_profiles` then reports
+`configured_unverified`; this records intent but does not claim OpenRouter
+enforced the policy. With no expectation it reports `unknown`.
+
 OpenRouter currently documents built-in sensitive-info presets for email,
 phone, SSN, credit-card, IP-address, person-name, and address data. Arbitrary API
 keys and product-specific credentials require custom filters unless OpenRouter

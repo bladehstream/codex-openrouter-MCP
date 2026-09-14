@@ -17,6 +17,12 @@ screened for denied paths, unsafe links, binary content, and encoding before
 they are sent to an approved OpenRouter route. Review has no write or shell
 capability.
 
+`start_file_review` retains the exact selected-file content and hash manifest in
+MCP process memory so `send_followup` can reconstruct the full conversation
+without provider-side storage. Jobs are not persisted and disappear when the
+MCP process exits. Synchronous results expose audit `delegation_id` values only;
+continuation requires a `job_id` from an asynchronous start tool.
+
 The implementation rejects traversal, absolute/UNC/device paths, Windows
 alternate data streams and reserved names, symlinks, junctions, reparse points,
 hard-linked inputs, sensitive filenames, existing outputs,

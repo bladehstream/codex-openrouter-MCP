@@ -18,6 +18,7 @@ and prevents routing outside the configured provider list.
 - synchronous delegation;
 - selected-file review for up to 100 UTF-8 source and text files, limited to
   500 KB each and 750 KB combined;
+- follow-up-capable asynchronous file review with an in-memory hashed snapshot;
 - compatibility with externally configured OpenRouter workspace/API-key
   guardrails, with an optional user-supplied local pre-transmission scanner;
 - in-memory asynchronous jobs, status, follow-up, result, and cancellation;
@@ -48,6 +49,8 @@ uv run codex-openrouter-mcp
 
 See [Codex configuration](docs/configuration.md) for setup and the
 [security policy](SECURITY.md) for the current trust boundary.
+See [delegation and continuation](docs/delegation.md) for synchronous versus
+asynchronous IDs, file-review follow-ups, reasoning budgets, and finalization.
 
 For skill-guided installation through the repository's Git marketplace, see
 [plugin installation](docs/plugin.md). The bundled `delegate-openrouter` skill

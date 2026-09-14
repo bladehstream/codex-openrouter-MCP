@@ -24,6 +24,8 @@ ALLOWED_EXTENSIONS = {".md", ".txt", ".json", ".csv", ".yaml", ".yml"}
 REVIEW_INPUT_EXTENSIONS = ALLOWED_EXTENSIONS | {
     ".c",
     ".cc",
+    ".cfg",
+    ".conf",
     ".cpp",
     ".cs",
     ".css",
@@ -32,6 +34,7 @@ REVIEW_INPUT_EXTENSIONS = ALLOWED_EXTENSIONS | {
     ".h",
     ".hpp",
     ".html",
+    ".ini",
     ".ipynb",
     ".java",
     ".js",
@@ -341,7 +344,12 @@ def load_review_inputs(
     metadata: list[dict[str, object]] = []
     total = 0
     for relative in input_paths:
-        path = resolve_input_path(workspace_root, relative, REVIEW_INPUT_EXTENSIONS)
+        try:
+            path = resolve_input_path(workspace_root, relative, REVIEW_INPUT_EXTENSIONS)
+        except ArtifactSecurityError as exc:
+            raise ArtifactSecurityError(f"{relative}: {exc}") from exc
+        except FileNotFoundError as exc:
+            raise ArtifactSecurityError(f"{relative}: input file was not found") from exc
         if path.stat().st_size > MAX_REVIEW_FILE_BYTES:
             raise ArtifactSecurityError(f"review input exceeds per-file byte limit: {relative}")
         raw = path.read_bytes()

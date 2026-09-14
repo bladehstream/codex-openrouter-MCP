@@ -205,8 +205,8 @@ def test_large_file_review() -> None:
         source.write_text(content, encoding="utf-8")
         assert source.stat().st_size > 40_000
         with McpClient({"OPENROUTER_ARTIFACT_ROOT": str(root)}) as client:
-            result = client.tool(
-                "review_files",
+            started = client.tool(
+                "start_file_review",
                 {
                     "profile": "glm_mechanical",
                     "task": "Return exactly the marker found in the final line and nothing else.",
@@ -214,11 +214,30 @@ def test_large_file_review() -> None:
                     "max_output_tokens": 96,
                 },
             )
+            assert started["followup_supported"] is True
+            assert started["job_kind"] == "file_review"
+            assert wait_job(client, started["job_id"])["status"] == "completed"
+            result = client.tool("get_task_result", {"job_id": started["job_id"]})
             assert marker in result["result"]
             assert result["input_bytes"] == source.stat().st_size
             assert result["inputs"][0]["path"] == "large.py"
             assert result["selected_provider"] in {"Relace", "Wafer"}
             assert result["privacy"] == {"zdr": True, "data_collection": "deny"}
+            followup_marker = f"FOLLOWUP_{secrets.token_hex(5)}"
+            client.tool(
+                "send_followup",
+                {
+                    "job_id": started["job_id"],
+                    "message": f"Return {marker} and {followup_marker}, nothing else.",
+                },
+            )
+            assert wait_job(client, started["job_id"])["status"] == "completed"
+            followed_up = client.tool(
+                "get_task_result", {"job_id": started["job_id"]}
+            )
+            assert marker in followed_up["result"]
+            assert followup_marker in followed_up["result"]
+            assert followed_up["inputs"] == result["inputs"]
 
 
 def main() -> int:

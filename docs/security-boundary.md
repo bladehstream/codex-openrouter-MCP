@@ -10,11 +10,18 @@ Inline tasks accept up to 200,000 characters. `review_files` is the preferred
 path for larger reviews: it reads only 1-100 explicitly named UTF-8 text or
 source files under the locked workspace root, up to 500 KB per file and 750 KB
 combined. It applies traversal, link, sensitive-name, encoding, and optional
-local-scanner checks before transmitting content, and returns the reviewed paths, byte counts,
-SHA-256 hashes, and input-safety status with the model result. Content scanning
+local-scanner checks before transmitting content, and returns the reviewed
+paths, byte counts, SHA-256 hashes, and input-safety status with the model result. Content scanning
 is handled by any externally assigned OpenRouter guardrails. The MCP does not
 create or verify them. An optional user-supplied local scanner can run before
 transmission. It does not grant the model general filesystem access.
+
+Synchronous `review_files` returns an audit `delegation_id` and explicitly does
+not support `send_followup`. `start_file_review` creates a `job_id`, retains the
+exact file content and SHA-256 manifest in process memory, and reconstructs the
+full review conversation for follow-ups. It does not re-read changed files or
+depend on provider-side storage. Follow-up context is capped at 900,000
+characters, and all jobs disappear when the MCP process stops.
 
 ## Artifact delegation
 

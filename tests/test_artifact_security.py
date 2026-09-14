@@ -5,6 +5,7 @@ import os
 import pathlib
 import tempfile
 import threading
+import time
 import unittest
 from unittest import mock
 
@@ -129,6 +130,13 @@ class ReviewInputTests(unittest.TestCase):
         self.assertEqual(metadata[0]["bytes"], len(raw))
         self.assertEqual(len(metadata[0]["sha256"]), 64)
 
+    def test_accepts_common_configuration_extensions(self) -> None:
+        names = ["platformio.ini", "service.cfg", "application.conf"]
+        for name in names:
+            (self.root / name).write_text("setting=value\n", encoding="utf-8")
+        _, metadata = artifacts.load_review_inputs(self.root, names)
+        self.assertEqual([item["path"] for item in metadata], names)
+
     def test_default_policy_allows_credential_code_but_rejects_unsafe_inputs(self) -> None:
         (self.root / "secret.py").write_text(
             "api_key=sk-exampleexampleexample123", encoding="utf-8"
@@ -143,6 +151,14 @@ class ReviewInputTests(unittest.TestCase):
                 artifacts.ArtifactSecurityError
             ):
                 artifacts.load_review_inputs(self.root, [name])
+
+    def test_path_error_names_rejected_input(self) -> None:
+        (self.root / "firmware.zip").write_bytes(b"not really a zip")
+        with self.assertRaisesRegex(
+            artifacts.ArtifactSecurityError,
+            r"firmware\.zip: input extension is not allowed",
+        ):
+            artifacts.load_review_inputs(self.root, ["firmware.zip"])
 
     def test_rejects_duplicate_paths(self) -> None:
         (self.root / "same.py").write_text("pass\n", encoding="utf-8")
@@ -204,11 +220,53 @@ class ReviewInputTests(unittest.TestCase):
             )
         result = response["result"]["structuredContent"]
         self.assertEqual(result["result"], "No findings.")
+        self.assertFalse(result["followup_supported"])
+        self.assertIn("start_file_review", result["continuation_hint"])
         self.assertEqual(result["inputs"][0]["path"], "module.ts")
         self.assertEqual(result["input_bytes"], len(raw))
         sent_prompt = perform.call_args.args[1]
         self.assertIn(raw.decode("utf-8"), sent_prompt)
         self.assertIn("untrusted data", sent_prompt)
+        self.assertEqual(perform.call_args.kwargs["request_timeout"], 330)
+
+    def test_start_file_review_returns_followup_job_with_manifest(self) -> None:
+        (self.root / "module.ini").write_text("setting=value\n", encoding="utf-8")
+        with mock.patch.dict(
+            os.environ,
+            {"OPENROUTER_ARTIFACT_ROOT": str(self.root)},
+            clear=False,
+        ), mock.patch.object(mcp_server, "perform_task") as perform:
+            perform.return_value = {"result": "Review complete.", "delegation_id": "dlg_test"}
+            mcp = mcp_server.McpServer()
+            response = mcp.handle(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 8,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "start_file_review",
+                        "arguments": {
+                            "profile": "deepseek_high",
+                            "task": "Review configuration.",
+                            "input_paths": ["module.ini"],
+                        },
+                    },
+                }
+            )
+            started = response["result"]["structuredContent"]
+            deadline = time.monotonic() + 2
+            while time.monotonic() < deadline:
+                result = mcp.delegator.get_task_result({"job_id": started["job_id"]})
+                if result["status"] == "completed":
+                    break
+                time.sleep(0.01)
+            else:
+                self.fail("file review did not complete")
+
+        self.assertTrue(started["followup_supported"])
+        self.assertEqual(started["job_kind"], "file_review")
+        self.assertEqual(started["inputs"][0]["path"], "module.ini")
+        self.assertEqual(result["inputs"], started["inputs"])
         self.assertEqual(perform.call_args.kwargs["request_timeout"], 330)
 
 

@@ -48,5 +48,5 @@ codex plugin marketplace upgrade codex-openrouter-mcp
 codex plugin add openrouter-delegator@codex-openrouter-mcp
 ```
 
-Verify `uv tool list` reports `codex-openrouter-mcp v0.2.1`, reopen Codex, and
+Verify `uv tool list` reports `codex-openrouter-mcp v0.3.0`, reopen Codex, and
 start a new task so updated skill instructions and MCP metadata are loaded.

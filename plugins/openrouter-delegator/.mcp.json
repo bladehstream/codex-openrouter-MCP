@@ -11,6 +11,7 @@
         "list_profiles",
         "delegate_task",
         "review_files",
+        "start_file_review",
         "start_task",
         "get_task_status",
         "get_task_result",
@@ -24,10 +25,12 @@
       ],
       "env_vars": [
         "OPENROUTER_API_KEY",
-        "OPENROUTER_SAFETY_SCANNER_MODULE"
+        "OPENROUTER_SAFETY_SCANNER_MODULE",
+        "OPENROUTER_EXPECTED_GUARDRAIL"
       ],
       "env": {
-        "OPENROUTER_ARTIFACT_ROOT_MODE": "cwd"
+        "OPENROUTER_ARTIFACT_ROOT_MODE": "cwd",
+        "OPENROUTER_PLUGIN_BASE_VERSION": "0.3.0"
       },
       "tools": {
         "commit_artifact": {

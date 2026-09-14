@@ -142,14 +142,22 @@ def _request_endpoint(
 
 def output_text(payload: dict[str, Any]) -> str:
     direct = payload.get("output_text")
-    if isinstance(direct, str):
+    if isinstance(direct, str) and direct.strip():
         return direct
     parts: list[str] = []
     for item in payload.get("output", []):
-        if not isinstance(item, dict):
+        if (
+            not isinstance(item, dict)
+            or item.get("type") != "message"
+            or item.get("role") != "assistant"
+        ):
             continue
         for content in item.get("content", []):
-            if isinstance(content, dict) and isinstance(content.get("text"), str):
+            if (
+                isinstance(content, dict)
+                and content.get("type") == "output_text"
+                and isinstance(content.get("text"), str)
+            ):
                 parts.append(content["text"])
     return "\n".join(parts)
 

@@ -15,6 +15,7 @@ enabled_tools = [
   "list_profiles",
   "delegate_task",
   "review_files",
+  "start_file_review",
   "start_task",
   "get_task_status",
   "get_task_result",
@@ -32,6 +33,8 @@ OPENROUTER_ARTIFACT_ROOT_MODE = "cwd"
 
 # Optional: a separately installed local pre-transmission scanner module.
 # OPENROUTER_SAFETY_SCANNER_MODULE = "company_codex_scanner"
+# Optional: expected OpenRouter policy label or ID; this is reported but not verified.
+# OPENROUTER_EXPECTED_GUARDRAIL = "engineering-review"
 
 [mcp_servers.openrouter_delegator.tools.commit_artifact]
 approval_mode = "prompt"
@@ -107,12 +110,14 @@ trust-boundary distinction and optional local scanner interface.
 ## Input limits
 
 - `delegate_task` and `start_task`: 200,000 task characters.
-- `review_files`: 1-100 unique files, 500 KB per file, 750 KB combined.
+- `review_files` and `start_file_review`: 1-100 unique files, 500 KB per file,
+  750 KB combined.
 - `prepare_artifact`: at most 20 input files and 10 output files.
 - Generated artifact output: 1 MB per file and 5 MB combined.
 
 `review_files` accepts UTF-8 text plus common source formats including Python,
 JavaScript/TypeScript, Java, C/C++, C#, Go, Rust, Kotlin, Swift, Ruby, PHP,
 Scala, shell, PowerShell, SQL, HTML/CSS, Vue, Svelte, XML, GraphQL, Protocol
-Buffers, notebooks, Markdown, JSON, YAML, TOML, CSV, and plain text. Binary or
-invalid UTF-8 input is rejected.
+Buffers, notebooks, INI, CFG, CONF, Markdown, JSON, YAML, TOML, CSV, and plain
+text. Binary or invalid UTF-8 input is rejected. Rejection messages identify
+the offending relative path.

@@ -53,6 +53,42 @@ class RoutingTests(unittest.TestCase):
         payload = {"choices": [{"message": {"content": '{"ok":true}'}}]}
         self.assertEqual(routing.chat_output_text(payload), '{"ok":true}')
 
+    def test_output_text_prefers_top_level(self) -> None:
+        payload = {
+            "output_text": "final answer",
+            "output": [
+                {
+                    "type": "reasoning",
+                    "content": [{"type": "summary_text", "text": "scratch"}],
+                }
+            ],
+        }
+        self.assertEqual(routing.output_text(payload), "final answer")
+
+    def test_output_text_ignores_reasoning_and_non_output_content(self) -> None:
+        payload = {
+            "output": [
+                {
+                    "type": "reasoning",
+                    "content": [{"type": "summary_text", "text": "scratch"}],
+                },
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [
+                        {"type": "analysis", "text": "hidden reasoning"},
+                        {"type": "output_text", "text": "visible answer"},
+                    ],
+                },
+                {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "output_text", "text": "not assistant"}],
+                },
+            ]
+        }
+        self.assertEqual(routing.output_text(payload), "visible answer")
+
 
 if __name__ == "__main__":
     unittest.main()

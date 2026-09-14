@@ -10,6 +10,7 @@ from typing import Callable
 
 
 SCANNER_ENV = "OPENROUTER_SAFETY_SCANNER_MODULE"
+EXPECTED_GUARDRAIL_ENV = "OPENROUTER_EXPECTED_GUARDRAIL"
 Scanner = Callable[..., str | None]
 
 
@@ -19,10 +20,20 @@ class SafetyScannerError(RuntimeError):
 
 def status() -> dict[str, object]:
     module_name = os.environ.get(SCANNER_ENV, "").strip()
+    expected_guardrail = os.environ.get(EXPECTED_GUARDRAIL_ENV, "").strip()
+    expectation_valid = bool(expected_guardrail) and len(expected_guardrail) <= 128 and not any(
+        character in expected_guardrail for character in "\r\n"
+    )
     return {
         "local_scanner_enabled": bool(module_name),
         "local_scanner_module": module_name or None,
         "openrouter_guardrails": "managed by the OpenRouter workspace or API key",
+        "expected_guardrail": expected_guardrail if expectation_valid else None,
+        "guardrail_status": (
+            "configured_unverified"
+            if expectation_valid
+            else "invalid_expectation" if expected_guardrail else "unknown"
+        ),
         "boundary": "OpenRouter guardrails run after content reaches OpenRouter and before the model provider",
     }
 
