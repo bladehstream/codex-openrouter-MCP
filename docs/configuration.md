@@ -35,6 +35,8 @@ OPENROUTER_ARTIFACT_ROOT_MODE = "cwd"
 # OPENROUTER_SAFETY_SCANNER_MODULE = "company_codex_scanner"
 # Optional: expected OpenRouter policy label or ID; this is reported but not verified.
 # OPENROUTER_EXPECTED_GUARDRAIL = "engineering-review"
+# Optional: validated external weighted model/provider profiles.
+# OPENROUTER_ROUTES_FILE = "/absolute/path/to/routes.json"
 
 [mcp_servers.openrouter_delegator.tools.commit_artifact]
 approval_mode = "prompt"
@@ -121,3 +123,16 @@ Scala, shell, PowerShell, SQL, HTML/CSS, Vue, Svelte, XML, GraphQL, Protocol
 Buffers, notebooks, INI, CFG, CONF, Markdown, JSON, YAML, TOML, CSV, and plain
 text. Binary or invalid UTF-8 input is rejected. Rejection messages identify
 the offending relative path.
+
+## Models, providers, and weights
+
+The server loads a validated bundled route configuration by default. Set
+`OPENROUTER_ROUTES_FILE` to use an external versioned JSON file instead. This
+can change profile models, instructions, reasoning policy, resolved-model
+matching, provider allowlists, and priority weights without reinstalling the
+package. Restart Codex after changing the file or environment variable.
+
+Use `codex-openrouter-routes` to print or validate configuration. See
+[routing configuration](routing-config.md) for the schema and workflow.
+Remember that the effective provider set is the intersection of this file and
+the OpenRouter API-key/workspace guardrail allowlist.

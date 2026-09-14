@@ -60,6 +60,7 @@ for the upstream token and item semantics.
 - whether those versions match;
 - optional local-scanner status;
 - an expected OpenRouter guardrail label/ID when configured.
+- the active route source and SHA-256 configuration hash.
 
 An expected guardrail is reported as `configured_unverified`. The ordinary
 inference credential cannot prove the external assignment, so the MCP never

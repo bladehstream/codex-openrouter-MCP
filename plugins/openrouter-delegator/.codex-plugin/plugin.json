@@ -1,6 +1,6 @@
 {
   "name": "openrouter-delegator",
-  "version": "0.3.0+codex.20260914063309",
+  "version": "0.4.0+codex.20260914070541",
   "description": "Delegate bounded engineering work to approved OpenRouter routes while Codex coordinates and verifies.",
   "author": {
     "name": "bladehstream",

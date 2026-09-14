@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codex-openrouter-mcp"
-version = "0.3.0"
+version = "0.4.0"
 description = "Secure local MCP delegation from Codex to approved OpenRouter models"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -20,6 +20,10 @@ dependencies = []
 
 [project.scripts]
 codex-openrouter-mcp = "codex_openrouter_delegator.server:serve"
+codex-openrouter-routes = "codex_openrouter_delegator.route_config:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+codex_openrouter_delegator = ["default_routes.json"]

@@ -7,7 +7,7 @@ Current profiles:
 
 | Profile | Model | Provider order |
 | --- | --- | --- |
-| `deepseek_high` | `deepseek/deepseek-v4.1-flash` | Fireworks, Relace |
+| `deepseek_high` | `deepseek/deepseek-v4.1-flash` | Fireworks, Relace, Novita, SiliconFlow |
 | `glm_mechanical` | `~z-ai/glm-flash-latest` | Relace, Wafer |
 
 Every request enforces Zero Data Retention, denies provider data collection,
@@ -21,6 +21,8 @@ and prevents routing outside the configured provider list.
 - follow-up-capable asynchronous file review with an in-memory hashed snapshot;
 - compatibility with externally configured OpenRouter workspace/API-key
   guardrails, with an optional user-supplied local pre-transmission scanner;
+- versioned, weighted model/provider profiles with a validated external JSON
+  override and configuration hash;
 - in-memory asynchronous jobs, status, follow-up, result, and cancellation;
 - selected-file artifact preparation;
 - in-memory artifact preview with SHA-256 manifests;
@@ -51,6 +53,8 @@ See [Codex configuration](docs/configuration.md) for setup and the
 [security policy](SECURITY.md) for the current trust boundary.
 See [delegation and continuation](docs/delegation.md) for synchronous versus
 asynchronous IDs, file-review follow-ups, reasoning budgets, and finalization.
+See [routing configuration](docs/routing-config.md) to change models, providers,
+weights, reasoning policy, or profile instructions without editing Python.
 
 For skill-guided installation through the repository's Git marketplace, see
 [plugin installation](docs/plugin.md). The bundled `delegate-openrouter` skill

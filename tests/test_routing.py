@@ -10,7 +10,15 @@ class RoutingTests(unittest.TestCase):
         deepseek = routing.ROUTES["deepseek_high"]
         glm = routing.ROUTES["glm_mechanical"]
         self.assertEqual(deepseek.model, "deepseek/deepseek-v4.1-flash")
-        self.assertEqual(deepseek.allowed_provider_slugs, ("fireworks", "relace"))
+        self.assertEqual(
+            deepseek.allowed_provider_slugs,
+            ("fireworks", "relace", "novita", "siliconflow"),
+        )
+        self.assertEqual(
+            deepseek.allowed_provider_displays,
+            ("Fireworks", "Relace", "Novita", "SiliconFlow"),
+        )
+        self.assertEqual(deepseek.provider_weights, (100.0, 90.0, 60.0, 50.0))
         self.assertEqual(glm.model, "~z-ai/glm-flash-latest")
         self.assertEqual(glm.allowed_provider_slugs, ("relace", "wafer"))
 

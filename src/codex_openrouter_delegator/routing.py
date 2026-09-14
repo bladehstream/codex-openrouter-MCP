@@ -2,53 +2,21 @@
 
 from __future__ import annotations
 
-import dataclasses
 import json
+import re
 import time
 import urllib.error
 import urllib.request
 from typing import Any
 
+from .route_config import Route
+from .route_config import load_active_routes
+
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 
-@dataclasses.dataclass(frozen=True)
-class Route:
-    role: str
-    model: str
-    provider_slug: str
-    provider_display: str
-    fallback_provider_slugs: tuple[str, ...] = ()
-    fallback_provider_displays: tuple[str, ...] = ()
-
-    @property
-    def allowed_provider_slugs(self) -> tuple[str, ...]:
-        return (self.provider_slug, *self.fallback_provider_slugs)
-
-    @property
-    def allowed_provider_displays(self) -> tuple[str, ...]:
-        return (self.provider_display, *self.fallback_provider_displays)
-
-
-ROUTES = {
-    "deepseek_high": Route(
-        role="high-level",
-        model="deepseek/deepseek-v4.1-flash",
-        provider_slug="fireworks",
-        provider_display="Fireworks",
-        fallback_provider_slugs=("relace",),
-        fallback_provider_displays=("Relace",),
-    ),
-    "glm_mechanical": Route(
-        role="mechanical",
-        model="~z-ai/glm-flash-latest",
-        provider_slug="relace",
-        provider_display="Relace",
-        fallback_provider_slugs=("wafer",),
-        fallback_provider_displays=("Wafer",),
-    ),
-}
+ROUTES, ROUTE_CONFIG = load_active_routes()
 
 
 class RoutingError(RuntimeError):
@@ -195,10 +163,9 @@ def validate_response(payload: dict[str, Any], route: Route) -> None:
     model = payload.get("model")
     if not isinstance(model, str):
         raise RoutingError("OpenRouter omitted the resolved model")
-    if route.model.startswith("~"):
-        folded = model.casefold()
-        if "z-ai/glm" not in folded or "flash" not in folded:
-            raise RoutingError(f"GLM latest resolved outside its approved family: {model}")
+    if route.resolved_model_pattern:
+        if not re.fullmatch(route.resolved_model_pattern, model, flags=re.IGNORECASE):
+            raise RoutingError(f"resolved model does not match approved pattern: {model}")
     elif model != route.model:
         raise RoutingError(f"unexpected resolved model: {model}")
     providers = selected_providers(payload)

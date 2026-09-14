@@ -72,3 +72,11 @@ Coding and test execution must use separate tools and approvals:
 
 Arbitrary shell strings and direct unrestricted source-tree writes are out of
 scope for the current release.
+
+## Route configuration
+
+Models, providers, weights, reasoning policy, and delegate instructions come
+from a versioned JSON route file validated at MCP startup. Provider weights are
+converted to a closed ordered allowlist; they cannot enable unlisted fallback.
+An external route file is an explicit expansion of the trust boundary and is
+identified by source and SHA-256 hash in `list_profiles`.

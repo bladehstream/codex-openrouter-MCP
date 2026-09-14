@@ -240,17 +240,76 @@ def test_large_file_review() -> None:
             assert followed_up["inputs"] == result["inputs"]
 
 
+def test_last_resort_providers() -> None:
+    failures = []
+    for slug, display in (("novita", "Novita"), ("siliconflow", "SiliconFlow")):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            route_file = pathlib.Path(raw_dir) / "routes.json"
+            route_file.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "profiles": {
+                            "deepseek_high": {
+                                "role": "high-level",
+                                "model": "deepseek/deepseek-v4.1-flash",
+                                "instructions": "Return the requested marker exactly.",
+                                "reasoning": {"effort": "low", "exclude": True},
+                                "providers": [
+                                    {"slug": slug, "display": display, "weight": 100}
+                                ],
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            marker = f"PROVIDER_{slug.upper()}_{secrets.token_hex(5)}"
+            try:
+                with McpClient({"OPENROUTER_ROUTES_FILE": str(route_file)}) as client:
+                    catalog = client.tool("list_profiles")
+                    assert catalog["route_config"]["source"] == "external"
+                    assert catalog["profiles"][0]["provider_order"] == [slug]
+                    result = client.tool(
+                        "delegate_task",
+                        {
+                            "profile": "deepseek_high",
+                            "task": f"Return exactly {marker} and nothing else.",
+                            "max_output_tokens": 96,
+                        },
+                    )
+                    assert marker in result["result"]
+                    assert result["selected_provider"] == display
+                    assert result["privacy"] == {"zdr": True, "data_collection": "deny"}
+            except Exception as exc:  # noqa: BLE001 - report every provider in this live test
+                failures.append(f"{display}: {exc}")
+    if failures:
+        raise AssertionError("; ".join(failures))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.parse_args()
+    parser.add_argument(
+        "--case",
+        choices=("delegation", "async", "artifacts", "large-review", "last-resorts"),
+    )
+    args = parser.parse_args()
     key = credentials.load_openrouter_key()
     print(f"Credential: present ({len(key)} characters; value hidden)")
-    for name, function in (
-        ("synchronous delegation", test_delegation),
-        ("async follow-up", test_async_followup),
-        ("artifact boundary", test_artifacts),
-        ("large selected-file review", test_large_file_review),
-    ):
+    cases = {
+        "delegation": ("synchronous delegation", test_delegation),
+        "async": ("async follow-up", test_async_followup),
+        "artifacts": ("artifact boundary", test_artifacts),
+        "large-review": ("large selected-file review", test_large_file_review),
+        "last-resorts": ("DeepSeek last-resort providers", test_last_resort_providers),
+    }
+    default_cases = ("delegation", "async", "artifacts", "large-review")
+    selected = (
+        [cases[args.case]]
+        if args.case
+        else [cases[case_name] for case_name in default_cases]
+    )
+    for name, function in selected:
         started = time.monotonic()
         print(f"[RUN ] {name}", flush=True)
         function()

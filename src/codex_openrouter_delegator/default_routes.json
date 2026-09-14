@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "profiles": {
+    "deepseek_high": {
+      "role": "high-level",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "instructions": "Act as a high-level independent engineering specialist. Analyze ambiguity, correctness, architecture, edge cases, and validation. Return concise, evidence-based conclusions. Do not claim to read files or run tools.",
+      "reasoning": {
+        "effort": "low",
+        "exclude": true
+      },
+      "providers": [
+        {"slug": "fireworks", "display": "Fireworks", "weight": 100},
+        {"slug": "relace", "display": "Relace", "weight": 90},
+        {"slug": "novita", "display": "Novita", "weight": 60},
+        {"slug": "siliconflow", "display": "SiliconFlow", "weight": 50}
+      ]
+    },
+    "glm_mechanical": {
+      "role": "mechanical",
+      "model": "~z-ai/glm-flash-latest",
+      "resolved_model_pattern": "^z-ai/glm.*flash.*$",
+      "instructions": "Act as a precise mechanical engineering worker. Follow the requested transformation exactly, avoid unrelated changes, and return a compact deterministic answer. Do not claim to read files or run tools.",
+      "reasoning": {
+        "effort": "none",
+        "exclude": true
+      },
+      "providers": [
+        {"slug": "relace", "display": "Relace", "weight": 100},
+        {"slug": "wafer", "display": "Wafer", "weight": 50}
+      ]
+    }
+  }
+}

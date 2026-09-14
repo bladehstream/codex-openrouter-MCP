@@ -6,6 +6,8 @@ Choose `glm_mechanical` when the work has a clear procedure and correctness can 
 
 Choose `deepseek_high` when the work benefits from competing hypotheses, cross-cutting tradeoffs, or a strong independent judgment. Typical examples include reviewing a supplied patch, designing an interface from stated constraints, reasoning about a subtle failure, threat-modeling a bounded feature, or proposing an implementation plan.
 
+Treat `list_profiles` as authoritative for the active model and effective provider order. Profiles may come from a validated external configuration rather than the bundled defaults. Higher provider weights are tried first; equal weights preserve configuration-file order. A weight expresses preference for a model/provider combination, not a traffic percentage.
+
 Keep the following with the coordinating Codex model:
 
 - deciding the user's actual objective and resolving scope;

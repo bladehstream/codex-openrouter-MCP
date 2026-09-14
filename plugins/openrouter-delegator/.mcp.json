@@ -26,11 +26,12 @@
       "env_vars": [
         "OPENROUTER_API_KEY",
         "OPENROUTER_SAFETY_SCANNER_MODULE",
-        "OPENROUTER_EXPECTED_GUARDRAIL"
+        "OPENROUTER_EXPECTED_GUARDRAIL",
+        "OPENROUTER_ROUTES_FILE"
       ],
       "env": {
         "OPENROUTER_ARTIFACT_ROOT_MODE": "cwd",
-        "OPENROUTER_PLUGIN_BASE_VERSION": "0.3.0"
+        "OPENROUTER_PLUGIN_BASE_VERSION": "0.4.0"
       },
       "tools": {
         "commit_artifact": {

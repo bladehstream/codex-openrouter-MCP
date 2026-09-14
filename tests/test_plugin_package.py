@@ -44,6 +44,16 @@ class PluginPackageTests(unittest.TestCase):
         ]
         self.assertEqual(plugin_base_version, project_version)
         self.assertEqual(configured_version, project_version)
+        self.assertEqual(
+            project["project"]["scripts"]["codex-openrouter-routes"],
+            "codex_openrouter_delegator.route_config:main",
+        )
+        self.assertIn(
+            "default_routes.json",
+            project["tool"]["setuptools"]["package-data"][
+                "codex_openrouter_delegator"
+            ],
+        )
 
     def test_mcp_uses_portable_entrypoint_and_gates_writes(self):
         config = json.loads((PLUGIN_ROOT / ".mcp.json").read_text())
@@ -54,10 +64,11 @@ class PluginPackageTests(unittest.TestCase):
         self.assertEqual(server["tools"]["commit_artifact"]["approval_mode"], "prompt")
         self.assertIn("OPENROUTER_API_KEY", server["env_vars"])
         self.assertIn("OPENROUTER_SAFETY_SCANNER_MODULE", server["env_vars"])
+        self.assertIn("OPENROUTER_ROUTES_FILE", server["env_vars"])
         self.assertIn("review_files", server["enabled_tools"])
         self.assertIn("start_file_review", server["enabled_tools"])
         self.assertEqual(server["tools"]["review_files"]["output_token_limit"], 16000)
-        self.assertEqual(server["env"]["OPENROUTER_PLUGIN_BASE_VERSION"], "0.3.0")
+        self.assertEqual(server["env"]["OPENROUTER_PLUGIN_BASE_VERSION"], "0.4.0")
 
     def test_skill_references_are_bundled(self):
         skill = (SKILL_ROOT / "SKILL.md").read_text()

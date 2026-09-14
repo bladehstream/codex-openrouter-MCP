@@ -47,6 +47,13 @@ MCP tool annotations are defense in depth, not the security boundary. Path,
 content, size, format, optional scanner, and routing policies are enforced
 inside the server.
 
+The bundled route file is validated at process startup. An external file named
+by `OPENROUTER_ROUTES_FILE` can change allowed models, providers, reasoning, and
+delegate instructions, so treat it as security-sensitive configuration. Invalid
+versions, fields, names, weights, duplicate providers, or model patterns fail
+closed before the MCP begins serving requests. `list_profiles` reports the
+active source and SHA-256 configuration hash.
+
 ## Credentials
 
 Use a dedicated, budget-limited OpenRouter key. Supported stores are Windows

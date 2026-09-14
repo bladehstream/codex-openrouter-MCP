@@ -31,6 +31,7 @@ SERVER_INSTRUCTIONS = (
     "reasoning and glm_mechanical for narrow mechanical work. Use review_files for one-shot file "
     "review and start_file_review when continuation may be needed. delegation_id is audit-only; "
     "only job_id works with send_followup. Selected files stay under the locked startup root. "
+    "Treat list_profiles as authoritative; higher configured provider weights are tried first. "
     "OpenRouter guardrails are managed on the workspace or API key; an optional local scanner is "
     "disabled unless configured. General delegation has no filesystem or shell access. Artifact tools "
     "may read only named inert text files; commit_artifact creates new files only after preview and "
@@ -70,12 +71,22 @@ class Delegator:
                 "versions_match": plugin_version == __version__ if plugin_version else None,
             },
             "input_safety": safety.status(),
+            "route_config": routing.ROUTE_CONFIG,
             "profiles": [
                 {
                     "id": profile,
                     "role": route.role,
                     "requested_model": route.model,
                     "provider_order": list(route.allowed_provider_slugs),
+                    "provider_preferences": [
+                        {"slug": slug, "display": display, "weight": weight}
+                        for slug, display, weight in zip(
+                            route.provider_slugs,
+                            route.provider_displays,
+                            route.provider_weights,
+                            strict=True,
+                        )
+                    ],
                     "zdr": True,
                     "data_collection": "deny",
                 }
@@ -390,9 +401,7 @@ def perform_task(
 
 
 def reasoning_policy(profile: str) -> dict[str, Any]:
-    if profile == "deepseek_high":
-        return {"effort": "low", "exclude": True}
-    return {"effort": "none", "exclude": True}
+    return dict(PROFILES[profile].reasoning)
 
 
 def summarize_usage(payloads: list[dict[str, Any]]) -> dict[str, int]:
@@ -422,17 +431,7 @@ def summarize_usage(payloads: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def profile_instructions(profile: str) -> str:
-    if profile == "deepseek_high":
-        return (
-            "Act as a high-level independent engineering specialist. Analyze ambiguity, "
-            "correctness, architecture, edge cases, and validation. Return concise, "
-            "evidence-based conclusions. Do not claim to read files or run tools."
-        )
-    return (
-        "Act as a precise mechanical engineering worker. Follow the requested transformation "
-        "exactly, avoid unrelated changes, and return a compact deterministic answer. "
-        "Do not claim to read files or run tools."
-    )
+    return PROFILES[profile].instructions
 
 
 def safe_exception(exc: Exception) -> str:
