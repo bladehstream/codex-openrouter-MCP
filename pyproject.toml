@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codex-openrouter-mcp"
+version = "0.1.0"
+description = "Secure local MCP delegation from Codex to approved OpenRouter models"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "bladehstream" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = []
+
+[project.scripts]
+codex-openrouter-mcp = "codex_openrouter_delegator.server:serve"
+
+[tool.setuptools.packages.find]
+where = ["src"]
