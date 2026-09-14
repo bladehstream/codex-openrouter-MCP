@@ -63,6 +63,8 @@ See [delegation and continuation](docs/delegation.md) for synchronous versus
 asynchronous IDs, file-review follow-ups, reasoning budgets, and finalization.
 See [routing configuration](docs/routing-config.md) to change models, providers,
 weights, reasoning policy, or profile instructions without editing Python.
+See the [implementation plan](IMPLEMENTATION_PLAN.md) for the dependency-ordered
+path from the current review/artifact boundary to isolated coding and testing.
 
 For skill-guided installation through the repository's Git marketplace, see
 [plugin installation](docs/plugin.md). The bundled `delegate-openrouter` skill

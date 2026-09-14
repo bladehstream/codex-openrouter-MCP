@@ -46,6 +46,9 @@ Status as of v0.4.1:
   metadata and document what OpenRouter receives.
 - [ ] Add a support policy covering alpha compatibility, response expectations,
   and unsupported environments.
+- [ ] Add a standalone privacy/data-flow notice covering Codex, the local MCP,
+  OpenRouter, guardrails, inference providers, audit metadata, retained jobs,
+  and optional local scanners.
 - [ ] Add a contributor guide and a policy for accepting new models/providers.
 
 ## P0: current operational blockers
@@ -146,6 +149,8 @@ Status as of v0.4.1:
 
 ## P1: adversarial tests and security review
 
+- [ ] Publish a versioned threat model covering assets, trust boundaries,
+  principals, attacker capabilities, abuse cases, and accepted residual risks.
 - [ ] Add prompt-injection fixtures inside source, documentation, issue text,
   logs, test output, generated patches, and repository instructions.
 - [ ] Test attempts to request secrets, expand roots, change providers, bypass
@@ -184,9 +189,16 @@ Status as of v0.4.1:
   budget.
 - [ ] Add configurable reasoning/finalization policies per task class while
   preserving usable final-answer budgets.
+- [ ] Detect non-empty but incomplete/truncated Responses results using status,
+  `incomplete_details`, finish metadata, and token usage; support one bounded
+  continuation or return an explicit partial-result state.
+- [ ] Verify and document whether OpenRouter's Responses endpoint preserves the
+  configured provider attempt order, including metadata order under fallback.
 
 ## P2: observability and lifecycle
 
+- [ ] Define a machine-checkable audit retention/redaction policy before adding
+  new event types or persistence.
 - [ ] Add structured audit schema versions and rotation/retention controls.
 - [ ] Correlate job ID, delegation ID, route hash, input manifest, provider
   attempts, finalization attempts, approvals, commands, and output manifests.
@@ -199,6 +211,8 @@ Status as of v0.4.1:
 
 ## P2: packaging, installation, and compatibility
 
+- [ ] Make CLI, test-harness, and diagnostic output explicitly UTF-8 on Windows
+  so non-ASCII model output cannot fail on a legacy console code page.
 - [ ] Add automated installation tests using built wheels and fresh user-level
   tool environments on Windows, macOS, and Linux.
 - [ ] Add upgrade/downgrade and running-process lock tests.
