@@ -5,7 +5,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 MARKETPLACE_ROOT = ROOT / ".agents" / "plugins"
-PLUGIN_ROOT = MARKETPLACE_ROOT / "plugins" / "openrouter-delegator"
+PLUGIN_ROOT = ROOT / "plugins" / "openrouter-delegator"
 SKILL_ROOT = PLUGIN_ROOT / "skills" / "delegate-openrouter"
 
 
@@ -15,7 +15,9 @@ class PluginPackageTests(unittest.TestCase):
         self.assertEqual(marketplace["name"], "codex-openrouter-mcp")
         entry = marketplace["plugins"][0]
         self.assertEqual(entry["name"], "openrouter-delegator")
-        source = (MARKETPLACE_ROOT / entry["source"]["path"]).resolve()
+        # Git marketplaces resolve local plugin sources from the installed
+        # repository root, not from the marketplace.json parent directory.
+        source = (ROOT / entry["source"]["path"]).resolve()
         self.assertEqual(source, PLUGIN_ROOT.resolve())
         self.assertTrue((source / ".codex-plugin" / "plugin.json").is_file())
 

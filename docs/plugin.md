@@ -1,6 +1,6 @@
 # Codex plugin and delegation skill
 
-The repository includes a Git marketplace under `.agents/plugins` containing the `openrouter-delegator` plugin. The plugin bundles the `delegate-openrouter` skill and starts the existing local MCP package through the `codex-openrouter-mcp` console command.
+The repository includes a Git marketplace manifest under `.agents/plugins` and its `openrouter-delegator` package under the repository-level `plugins/` directory. Git marketplace source paths resolve from the installed repository root. The plugin bundles the `delegate-openrouter` skill and starts the existing local MCP package through the `codex-openrouter-mcp` console command.
 
 ## Runtime prerequisite
 
