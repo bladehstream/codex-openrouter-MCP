@@ -11,6 +11,12 @@ locked at server startup. They stage output in memory and can create only new
 top-level inert text files under `artifacts/openrouter/` after preview and an
 exact manifest-hash check.
 
+Selected-file review can read explicitly named UTF-8 source and text files
+beneath the same locked root, with per-file and combined byte limits. Files are
+screened for denied paths, unsafe links, binary content, and likely credentials
+before they are sent to an approved OpenRouter route. Review has no write or
+shell capability.
+
 The implementation rejects traversal, absolute/UNC/device paths, Windows
 alternate data streams and reserved names, symlinks, junctions, reparse points,
 hard-linked inputs, sensitive filenames, likely credentials, existing outputs,

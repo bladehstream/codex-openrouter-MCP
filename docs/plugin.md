@@ -34,6 +34,7 @@ If the MCP was previously configured directly under `[mcp_servers.openrouter_del
 ## Upgrade
 
 ```bash
+uv tool install --force --python 3.11 .
 codex plugin marketplace upgrade codex-openrouter-mcp
 codex plugin add openrouter-delegator@codex-openrouter-mcp
 ```

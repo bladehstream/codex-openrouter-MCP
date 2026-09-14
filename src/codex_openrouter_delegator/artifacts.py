@@ -19,8 +19,45 @@ from typing import Any, Callable
 
 
 ALLOWED_EXTENSIONS = {".md", ".txt", ".json", ".csv", ".yaml", ".yml"}
+REVIEW_INPUT_EXTENSIONS = ALLOWED_EXTENSIONS | {
+    ".c",
+    ".cc",
+    ".cpp",
+    ".cs",
+    ".css",
+    ".go",
+    ".graphql",
+    ".h",
+    ".hpp",
+    ".html",
+    ".ipynb",
+    ".java",
+    ".js",
+    ".jsx",
+    ".kt",
+    ".kts",
+    ".php",
+    ".proto",
+    ".ps1",
+    ".py",
+    ".rb",
+    ".rs",
+    ".scala",
+    ".scss",
+    ".sh",
+    ".sql",
+    ".svelte",
+    ".swift",
+    ".toml",
+    ".ts",
+    ".tsx",
+    ".vue",
+    ".xml",
+}
 MAX_INPUT_FILE_BYTES = 1_000_000
 MAX_TOTAL_INPUT_BYTES = 2_000_000
+MAX_REVIEW_FILE_BYTES = 500_000
+MAX_REVIEW_TOTAL_BYTES = 750_000
 MAX_OUTPUT_FILE_BYTES = 1_000_000
 MAX_TOTAL_OUTPUT_BYTES = 5_000_000
 WINDOWS_RESERVED = {
@@ -272,12 +309,16 @@ class ArtifactStore:
         return proposal
 
 
-def resolve_input_path(root: pathlib.Path, relative: str) -> pathlib.Path:
+def resolve_input_path(
+    root: pathlib.Path,
+    relative: str,
+    allowed_extensions: set[str] = ALLOWED_EXTENSIONS,
+) -> pathlib.Path:
     parts = validate_relative_parts(relative)
     if any(is_denied_name(part) for part in parts):
         raise ArtifactSecurityError("input path is denied by policy")
     candidate = root.joinpath(*parts)
-    if candidate.suffix.casefold() not in ALLOWED_EXTENSIONS:
+    if candidate.suffix.casefold() not in allowed_extensions:
         raise ArtifactSecurityError("input extension is not allowed")
     resolved = candidate.resolve(strict=True)
     ensure_beneath(root, resolved)
@@ -287,6 +328,48 @@ def resolve_input_path(root: pathlib.Path, relative: str) -> pathlib.Path:
     if resolved.stat().st_nlink > 1:
         raise ArtifactSecurityError("hard-linked inputs are not allowed")
     return resolved
+
+
+def load_review_inputs(
+    workspace_root: pathlib.Path, input_paths: object
+) -> tuple[list[str], list[dict[str, object]]]:
+    if not isinstance(input_paths, list) or not all(isinstance(p, str) for p in input_paths):
+        raise ArtifactSecurityError("input_paths must be an array of strings")
+    if not input_paths or len(input_paths) > 20:
+        raise ArtifactSecurityError("input_paths must contain between 1 and 20 files")
+    if len({path.casefold() for path in input_paths}) != len(input_paths):
+        raise ArtifactSecurityError("input_paths must be unique case-insensitively")
+
+    sections: list[str] = []
+    metadata: list[dict[str, object]] = []
+    total = 0
+    for relative in input_paths:
+        path = resolve_input_path(workspace_root, relative, REVIEW_INPUT_EXTENSIONS)
+        if path.stat().st_size > MAX_REVIEW_FILE_BYTES:
+            raise ArtifactSecurityError(f"review input exceeds per-file byte limit: {relative}")
+        raw = path.read_bytes()
+        size = len(raw)
+        if size > MAX_REVIEW_FILE_BYTES:
+            raise ArtifactSecurityError(f"review input exceeds per-file byte limit: {relative}")
+        total += size
+        if total > MAX_REVIEW_TOTAL_BYTES:
+            raise ArtifactSecurityError("combined review input exceeds byte limit")
+        if b"\x00" in raw:
+            raise ArtifactSecurityError(f"binary input is not allowed: {relative}")
+        try:
+            text = raw.decode("utf-8", errors="strict")
+        except UnicodeDecodeError as exc:
+            raise ArtifactSecurityError(f"input is not valid UTF-8: {relative}") from exc
+        secret = detect_secret(text)
+        if secret:
+            raise ArtifactSecurityError(f"blocked likely {secret} in {relative}")
+        digest = hashlib.sha256(raw).hexdigest()
+        sections.append(
+            f"<untrusted_input path={json.dumps(relative)} sha256={json.dumps(digest)}>\n"
+            f"{text}\n</untrusted_input>"
+        )
+        metadata.append({"path": relative, "bytes": size, "sha256": digest})
+    return sections, metadata
 
 
 def validate_output_name(relative: str) -> None:

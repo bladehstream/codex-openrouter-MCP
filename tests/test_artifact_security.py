@@ -6,6 +6,7 @@ import pathlib
 import tempfile
 import threading
 import unittest
+from unittest import mock
 
 
 from codex_openrouter_delegator import artifacts
@@ -90,6 +91,95 @@ class ArtifactFormatTests(unittest.TestCase):
         artifacts.validate_content("data.csv", "a,b\n1,2\n")
         artifacts.validate_content("data.yaml", "a: 1\n")
         artifacts.validate_content("report.md", "# Safe\n")
+
+
+class ReviewInputTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.temporary.name)
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    def test_loads_source_files_with_hash_metadata(self) -> None:
+        content = "def example():\n    return 42\n"
+        path = self.root / "large.py"
+        path.write_text(content, encoding="utf-8")
+        raw = path.read_bytes()
+        sections, metadata = artifacts.load_review_inputs(self.root, ["large.py"])
+        self.assertIn(raw.decode("utf-8"), sections[0])
+        self.assertEqual(metadata[0]["path"], "large.py")
+        self.assertEqual(metadata[0]["bytes"], len(raw))
+        self.assertEqual(len(metadata[0]["sha256"]), 64)
+
+    def test_rejects_secret_binary_and_disallowed_extension(self) -> None:
+        (self.root / "secret.py").write_text(
+            "api_key=sk-exampleexampleexample123", encoding="utf-8"
+        )
+        (self.root / "binary.py").write_bytes(b"safe\x00unsafe")
+        (self.root / "invalid.py").write_bytes(b"\xff\xfe")
+        (self.root / "archive.zip").write_bytes(b"not really a zip")
+        for name in ("secret.py", "binary.py", "invalid.py", "archive.zip"):
+            with self.subTest(name=name), self.assertRaises(
+                artifacts.ArtifactSecurityError
+            ):
+                artifacts.load_review_inputs(self.root, [name])
+
+    def test_rejects_duplicate_paths(self) -> None:
+        (self.root / "same.py").write_text("pass\n", encoding="utf-8")
+        with self.assertRaises(artifacts.ArtifactSecurityError):
+            artifacts.load_review_inputs(self.root, ["same.py", "SAME.py"])
+
+    def test_enforces_per_file_and_combined_limits(self) -> None:
+        (self.root / "oversize.py").write_text(
+            "x" * (artifacts.MAX_REVIEW_FILE_BYTES + 1), encoding="utf-8"
+        )
+        with self.assertRaises(artifacts.ArtifactSecurityError):
+            artifacts.load_review_inputs(self.root, ["oversize.py"])
+
+        half = artifacts.MAX_REVIEW_TOTAL_BYTES // 2 + 1
+        (self.root / "one.py").write_text("a" * half, encoding="utf-8")
+        (self.root / "two.py").write_text("b" * half, encoding="utf-8")
+        with self.assertRaises(artifacts.ArtifactSecurityError):
+            artifacts.load_review_inputs(self.root, ["one.py", "two.py"])
+
+    def test_review_tool_sends_content_and_returns_audit_metadata(self) -> None:
+        content = "export const answer = 42;\n"
+        path = self.root / "module.ts"
+        path.write_text(content, encoding="utf-8")
+        raw = path.read_bytes()
+        with mock.patch.dict(
+            os.environ,
+            {"OPENROUTER_ARTIFACT_ROOT": str(self.root)},
+            clear=False,
+        ), mock.patch.object(mcp_server, "perform_task") as perform:
+            perform.return_value = {
+                "result": "No findings.",
+                "privacy": {"zdr": True, "data_collection": "deny"},
+            }
+            response = mcp_server.McpServer().handle(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 7,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "review_files",
+                        "arguments": {
+                            "profile": "deepseek_high",
+                            "task": "Review for correctness.",
+                            "input_paths": ["module.ts"],
+                        },
+                    },
+                }
+            )
+        result = response["result"]["structuredContent"]
+        self.assertEqual(result["result"], "No findings.")
+        self.assertEqual(result["inputs"][0]["path"], "module.ts")
+        self.assertEqual(result["input_bytes"], len(raw))
+        sent_prompt = perform.call_args.args[1]
+        self.assertIn(raw.decode("utf-8"), sent_prompt)
+        self.assertIn("untrusted data", sent_prompt)
+        self.assertEqual(perform.call_args.kwargs["request_timeout"], 330)
 
 
 class ArtifactStoreTests(unittest.TestCase):

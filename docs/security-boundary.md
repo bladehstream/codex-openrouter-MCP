@@ -6,6 +6,14 @@
 by the Sol/Astra parent. The external model has no repository, filesystem,
 shell, browser, plugin, or nested-delegation tools.
 
+Inline tasks accept up to 200,000 characters. `review_files` is the preferred
+path for larger reviews: it reads only 1-20 explicitly named UTF-8 text or
+source files under the locked workspace root, up to 500 KB per file and 750 KB
+combined. It applies the same traversal, link, sensitive-name, and likely-secret
+checks before transmitting content, and returns the reviewed paths, byte counts,
+and SHA-256 hashes with the model result. It does not grant the model general
+filesystem access.
+
 ## Artifact delegation
 
 `prepare_artifact` can read selected UTF-8 `.md`, `.txt`, `.json`, `.csv`,

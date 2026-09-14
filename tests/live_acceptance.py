@@ -196,6 +196,31 @@ def test_artifacts() -> None:
             assert marker in destination.read_text()
 
 
+def test_large_file_review() -> None:
+    with tempfile.TemporaryDirectory() as raw_dir:
+        root = pathlib.Path(raw_dir)
+        marker = f"LARGE_REVIEW_{secrets.token_hex(5)}"
+        content = ("# deterministic review padding\n" * 2200) + f"# marker: {marker}\n"
+        source = root / "large.py"
+        source.write_text(content, encoding="utf-8")
+        assert source.stat().st_size > 40_000
+        with McpClient({"OPENROUTER_ARTIFACT_ROOT": str(root)}) as client:
+            result = client.tool(
+                "review_files",
+                {
+                    "profile": "glm_mechanical",
+                    "task": "Return exactly the marker found in the final line and nothing else.",
+                    "input_paths": ["large.py"],
+                    "max_output_tokens": 96,
+                },
+            )
+            assert marker in result["result"]
+            assert result["input_bytes"] == source.stat().st_size
+            assert result["inputs"][0]["path"] == "large.py"
+            assert result["selected_provider"] in {"Relace", "Wafer"}
+            assert result["privacy"] == {"zdr": True, "data_collection": "deny"}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.parse_args()
@@ -205,6 +230,7 @@ def main() -> int:
         ("synchronous delegation", test_delegation),
         ("async follow-up", test_async_followup),
         ("artifact boundary", test_artifacts),
+        ("large selected-file review", test_large_file_review),
     ):
         started = time.monotonic()
         print(f"[RUN ] {name}", flush=True)

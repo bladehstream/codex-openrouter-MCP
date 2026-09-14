@@ -37,6 +37,8 @@ class PluginPackageTests(unittest.TestCase):
         self.assertEqual(server["env"]["OPENROUTER_ARTIFACT_ROOT_MODE"], "cwd")
         self.assertEqual(server["tools"]["commit_artifact"]["approval_mode"], "prompt")
         self.assertIn("OPENROUTER_API_KEY", server["env_vars"])
+        self.assertIn("review_files", server["enabled_tools"])
+        self.assertEqual(server["tools"]["review_files"]["output_token_limit"], 16000)
 
     def test_skill_references_are_bundled(self):
         skill = (SKILL_ROOT / "SKILL.md").read_text()

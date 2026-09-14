@@ -21,11 +21,17 @@ class McpProtocolTests(unittest.TestCase):
             }
         )
         self.assertEqual(initialized["result"]["protocolVersion"], "2025-06-18")
+        self.assertEqual(initialized["result"]["serverInfo"]["version"], "0.2.0")
         listed = mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         tools = {tool["name"]: tool for tool in listed["result"]["tools"]}
-        self.assertEqual(len(tools), 12)
+        self.assertEqual(len(tools), 13)
         self.assertFalse(tools["commit_artifact"]["annotations"]["readOnlyHint"])
         self.assertTrue(tools["preview_artifact"]["annotations"]["readOnlyHint"])
+        self.assertTrue(tools["review_files"]["annotations"]["readOnlyHint"])
+        self.assertEqual(
+            tools["delegate_task"]["inputSchema"]["properties"]["task"]["maxLength"],
+            200_000,
+        )
 
     def test_unknown_profile_fails_before_network(self) -> None:
         mcp = server.McpServer()

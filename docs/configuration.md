@@ -14,6 +14,7 @@ default_tools_approval_mode = "writes"
 enabled_tools = [
   "list_profiles",
   "delegate_task",
+  "review_files",
   "start_task",
   "get_task_status",
   "get_task_result",
@@ -37,6 +38,9 @@ output_token_limit = 4000
 output_token_limit = 8000
 
 [mcp_servers.openrouter_delegator.tools.get_task_result]
+output_token_limit = 16000
+
+[mcp_servers.openrouter_delegator.tools.review_files]
 output_token_limit = 16000
 ```
 

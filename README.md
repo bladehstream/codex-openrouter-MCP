@@ -16,6 +16,8 @@ and prevents routing outside the configured provider list.
 ## Capabilities
 
 - synchronous delegation;
+- selected-file review for UTF-8 source and text files up to 500 KB each and
+  750 KB combined;
 - in-memory asynchronous jobs, status, follow-up, result, and cancellation;
 - selected-file artifact preparation;
 - in-memory artifact preview with SHA-256 manifests;

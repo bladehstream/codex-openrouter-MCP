@@ -35,6 +35,18 @@ class JobTests(unittest.TestCase):
                 {"profile": "glm_mechanical", "task": "x", "max_output_tokens": 12_001}
             )
 
+    def test_large_inline_task_limit(self) -> None:
+        profile, task, maximum = server.validate_task_arguments(
+            {"profile": "deepseek_high", "task": "x" * 200_000}
+        )
+        self.assertEqual(profile, "deepseek_high")
+        self.assertEqual(len(task), 200_000)
+        self.assertEqual(maximum, 1200)
+        with self.assertRaises(ValueError):
+            server.validate_task_arguments(
+                {"profile": "deepseek_high", "task": "x" * 200_001}
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
