@@ -667,17 +667,34 @@ def tool_definitions() -> list[dict[str, Any]]:
 class McpServer:
     def __init__(self) -> None:
         self.delegator = Delegator()
-        artifact_root = configured_artifact_root()
-        self.artifacts = (
-            artifacts.ArtifactStore(
-                artifact_root,
-                lambda profile, task, maximum: perform_task(
-                    profile, task, maximum, artifact_json=True
-                ),
-            )
-            if artifact_root is not None
-            else None
-        )
+        self.file_access_error: str | None = None
+        self.artifacts: artifacts.ArtifactStore | None = None
+        try:
+            artifact_root = configured_artifact_root()
+            if artifact_root is not None:
+                self.artifacts = artifacts.ArtifactStore(
+                    artifact_root,
+                    lambda profile, task, maximum: perform_task(
+                        profile, task, maximum, artifact_json=True
+                    ),
+                )
+        except Exception as exc:  # noqa: BLE001 - degrade file tools, preserve MCP startup
+            self.file_access_error = safe_exception(exc)
+
+    def _list_profiles(self) -> dict[str, Any]:
+        result = self.delegator.list_profiles()
+        result["file_access"] = {
+            "enabled": self.artifacts is not None,
+            "error": self.file_access_error,
+            "reason": (
+                None
+                if self.artifacts is not None
+                else "initialization_failed"
+                if self.file_access_error
+                else "root_not_configured"
+            ),
+        }
+        return result
 
     def handle(self, message: dict[str, Any]) -> dict[str, Any] | None:
         method = message.get("method")
@@ -710,7 +727,7 @@ class McpServer:
 
     def _call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         methods = {
-            "list_profiles": self.delegator.list_profiles,
+            "list_profiles": self._list_profiles,
             "delegate_task": self.delegator.delegate_task,
             "start_task": self.delegator.start_task,
             "get_task_status": self.delegator.get_task_status,
@@ -739,7 +756,11 @@ class McpServer:
             "discard_artifact",
             "list_artifact_jobs",
         }:
-            raise ValueError("file tools require OPENROUTER_ARTIFACT_ROOT")
+            detail = self.file_access_error or (
+                "file access root is not configured; set OPENROUTER_ARTIFACT_ROOT "
+                "or OPENROUTER_ARTIFACT_ROOT_MODE=cwd"
+            )
+            raise ValueError(f"file tools unavailable: {detail}")
         method = methods.get(name)
         if method is None:
             raise ValueError("unknown tool")

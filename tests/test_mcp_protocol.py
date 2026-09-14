@@ -22,7 +22,7 @@ class McpProtocolTests(unittest.TestCase):
             }
         )
         self.assertEqual(initialized["result"]["protocolVersion"], "2025-06-18")
-        self.assertEqual(initialized["result"]["serverInfo"]["version"], "0.4.1")
+        self.assertEqual(initialized["result"]["serverInfo"]["version"], "0.4.2")
         listed = mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         tools = {tool["name"]: tool for tool in listed["result"]["tools"]}
         self.assertEqual(len(tools), 14)
@@ -60,7 +60,7 @@ class McpProtocolTests(unittest.TestCase):
             {
                 safety.SCANNER_ENV: "",
                 safety.EXPECTED_GUARDRAIL_ENV: "expected-policy",
-                "OPENROUTER_PLUGIN_BASE_VERSION": "0.4.1",
+                "OPENROUTER_PLUGIN_BASE_VERSION": "0.4.2",
             },
             clear=False,
         ):
@@ -70,7 +70,7 @@ class McpProtocolTests(unittest.TestCase):
         self.assertEqual(
             catalog["input_safety"]["guardrail_status"], "configured_unverified"
         )
-        self.assertEqual(catalog["runtime"]["server_version"], "0.4.1")
+        self.assertEqual(catalog["runtime"]["server_version"], "0.4.2")
         self.assertTrue(catalog["runtime"]["versions_match"])
         deepseek = next(
             profile
@@ -90,6 +90,47 @@ class McpProtocolTests(unittest.TestCase):
             clear=False,
         ), mock.patch.object(server.pathlib.Path, "cwd", return_value=pathlib.Path(raw_dir)):
             self.assertEqual(server.configured_artifact_root(), pathlib.Path(raw_dir).resolve())
+
+    def test_unsafe_home_root_degrades_file_tools_without_breaking_handshake(self) -> None:
+        with mock.patch.dict(
+            os.environ,
+            {"OPENROUTER_ARTIFACT_ROOT_MODE": "cwd", "OPENROUTER_ARTIFACT_ROOT": ""},
+            clear=False,
+        ), mock.patch.object(
+            server.pathlib.Path, "cwd", return_value=server.pathlib.Path.home()
+        ):
+            mcp = server.McpServer()
+        initialized = mcp.handle(
+            {
+                "jsonrpc": "2.0",
+                "id": 10,
+                "method": "initialize",
+                "params": {"protocolVersion": "2025-06-18"},
+            }
+        )
+        self.assertEqual(initialized["result"]["serverInfo"]["version"], "0.4.2")
+        catalog = mcp._call_tool("list_profiles", {})
+        self.assertFalse(catalog["structuredContent"]["file_access"]["enabled"])
+        self.assertEqual(
+            catalog["structuredContent"]["file_access"]["reason"],
+            "initialization_failed",
+        )
+        blocked = mcp.handle(
+            {
+                "jsonrpc": "2.0",
+                "id": 11,
+                "method": "tools/call",
+                "params": {
+                    "name": "review_files",
+                    "arguments": {
+                        "profile": "deepseek_high",
+                        "task": "review",
+                        "input_paths": ["README.md"],
+                    },
+                },
+            }
+        )
+        self.assertIn("file tools unavailable", blocked["error"]["message"])
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ server to the user-level `~/.codex/config.toml`. Use absolute paths.
 [mcp_servers.openrouter_delegator]
 command = "/absolute/path/to/python"
 args = ["-m", "codex_openrouter_delegator"]
-required = true
+required = false
 startup_timeout_sec = 20
 tool_timeout_sec = 360
 default_tools_approval_mode = "writes"
@@ -51,6 +51,10 @@ output_token_limit = 16000
 [mcp_servers.openrouter_delegator.tools.review_files]
 output_token_limit = 16000
 ```
+
+Keep `required = false`. This delegator is an auxiliary capability, not a
+dependency of Codex itself. Setting it to `true` makes Codex startup/resume fail
+whenever the executable, environment, configuration, or MCP handshake fails.
 
 CWD artifact mode locks artifact and selected-file review tools to the Codex
 task's startup working directory and refuses a filesystem root or the user home

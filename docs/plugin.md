@@ -48,9 +48,44 @@ codex plugin marketplace upgrade codex-openrouter-mcp
 codex plugin add openrouter-delegator@codex-openrouter-mcp
 ```
 
-Verify `uv tool list` reports `codex-openrouter-mcp v0.4.1`, reopen Codex, and
+Verify `uv tool list` reports `codex-openrouter-mcp v0.4.2`, reopen Codex, and
 start a new task so updated skill instructions and MCP metadata are loaded.
 
 Use `codex-openrouter-routes --show-default` and the workflow in
 [routing configuration](routing-config.md) to manage weighted models and
 providers without another package or plugin update.
+
+## Recover from a broken MCP installation
+
+The bundled MCP is intentionally optional. If Codex cannot start after an older
+plugin release or partial uv upgrade, first edit the effective Codex
+`config.toml` and temporarily disable the plugin:
+
+```toml
+[plugins."openrouter-delegator@codex-openrouter-mcp"]
+enabled = false
+```
+
+`required` is not a valid setting in that plugin-enable table. It belongs to an
+MCP server definition; v0.4.2 sets it to `false` in the bundled `.mcp.json`.
+
+Close every Codex desktop and CLI process, then repair the uv environment from
+the repository checkout:
+
+```powershell
+uv tool uninstall codex-openrouter-mcp
+uv tool install --python 3.11 .
+```
+
+Before re-enabling the plugin, verify both imports and the MCP handshake:
+
+```powershell
+uv tool list
+codex-openrouter-routes
+'{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}' |
+    codex-openrouter-mcp
+```
+
+The last command must return a JSON-RPC result containing `serverInfo`; it may
+then exit when stdin closes. Upgrade/reinstall the marketplace plugin, set its
+enable flag back to `true`, reopen Codex, and start a new task.

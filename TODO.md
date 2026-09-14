@@ -8,7 +8,7 @@ approval-gated inert text artifacts. It is not yet a general external coding
 agent runtime and is not ready for submission to the universal Codex plugin
 directory.
 
-Status as of v0.4.1:
+Status as of v0.4.2:
 
 - The repository owner has made the GitHub repository public. Repository
   visibility is permanently treated as a human-only action for automated agents;
@@ -52,6 +52,10 @@ Status as of v0.4.1:
 
 ## P0: current operational blockers
 
+- [x] Make the bundled MCP optional so a broken executable or handshake cannot
+  prevent Codex session startup.
+- [x] Degrade unsafe file-root initialization to unavailable file tools rather
+  than closing the MCP handshake.
 - [x] Add Novita and SiliconFlow to the OpenRouter guardrail assigned to the
   dedicated API key.
 - [x] Run `uv run python tests/live_acceptance.py --case last-resorts` and record

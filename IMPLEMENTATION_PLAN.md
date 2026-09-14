@@ -1,7 +1,7 @@
 # Implementation plan
 
 This plan turns the unchecked work in `TODO.md` into dependency-ordered releases
-and independently verifiable work packages. It starts from v0.4.1. Target
+and independently verifiable work packages. It starts from v0.4.2. Target
 versions express compatibility boundaries, not delivery dates.
 
 The universal ChatGPT/Codex plugin directory remains deferred. Repository

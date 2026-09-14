@@ -54,6 +54,14 @@ versions, fields, names, weights, duplicate providers, or model patterns fail
 closed before the MCP begins serving requests. `list_profiles` reports the
 active source and SHA-256 configuration hash.
 
+## Availability boundary
+
+The plugin declares the MCP server optional (`required: false`). A missing,
+broken, or invalid delegator must not prevent Codex from starting or resuming a
+session. File-root validation also degrades locally: an unsafe, missing, or
+unwritable root disables file and artifact tools while preserving the MCP
+handshake and text-only diagnostics/delegation where possible.
+
 ## Credentials
 
 Use a dedicated, budget-limited OpenRouter key. Supported stores are Windows

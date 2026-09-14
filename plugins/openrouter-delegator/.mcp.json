@@ -3,7 +3,7 @@
     "openrouter_delegator": {
       "command": "codex-openrouter-mcp",
       "enabled": true,
-      "required": true,
+      "required": false,
       "startup_timeout_sec": 20,
       "tool_timeout_sec": 360,
       "default_tools_approval_mode": "writes",
@@ -31,7 +31,7 @@
       ],
       "env": {
         "OPENROUTER_ARTIFACT_ROOT_MODE": "cwd",
-        "OPENROUTER_PLUGIN_BASE_VERSION": "0.4.1"
+        "OPENROUTER_PLUGIN_BASE_VERSION": "0.4.2"
       },
       "tools": {
         "commit_artifact": {

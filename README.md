@@ -41,6 +41,11 @@ and prevents routing outside the configured provider list.
 The artifact boundary does not provide external models with shell access,
 arbitrary file reads, source-tree writes, or existing-file replacement.
 
+The bundled MCP is optional to Codex session startup. If its executable,
+configuration, or handshake fails, Codex must still start; only delegator tools
+are unavailable. Unsafe file roots similarly disable file tools without closing
+the MCP handshake.
+
 OpenRouter guardrails are not provisioned or verified by this MCP. Without an
 optional local scanner, selected content reaches OpenRouter before any assigned
 OpenRouter guardrail evaluates it.
