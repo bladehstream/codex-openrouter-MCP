@@ -16,9 +16,8 @@ Status as of v0.4.1:
 - 70 offline tests pass across the current suite.
 - CI targets Windows, macOS, and Ubuntu with Python 3.11 and 3.12.
 - The normal paid live suite passes.
-- Novita and SiliconFlow are implemented as DeepSeek last-resort providers but
-  remain blocked by the current dedicated key's OpenRouter guardrail until its
-  provider allowlist is updated.
+- Novita and SiliconFlow are implemented and independently verified as DeepSeek
+  last-resort providers under the dedicated key's updated OpenRouter guardrail.
 - The project is source-available under PolyForm Noncommercial 1.0.0. Commercial
   use is not granted by the public license.
 
@@ -53,9 +52,9 @@ Status as of v0.4.1:
 
 ## P0: current operational blockers
 
-- [ ] Add Novita and SiliconFlow to the OpenRouter guardrail assigned to the
+- [x] Add Novita and SiliconFlow to the OpenRouter guardrail assigned to the
   dedicated API key.
-- [ ] Run `uv run python tests/live_acceptance.py --case last-resorts` and record
+- [x] Run `uv run python tests/live_acceptance.py --case last-resorts` and record
   successful provider identity, ZDR, and data-collection metadata for each.
 - [ ] Add maximum queued, running, completed, and retained job counts.
 - [ ] Add per-job and total retained-memory budgets for file snapshots and
