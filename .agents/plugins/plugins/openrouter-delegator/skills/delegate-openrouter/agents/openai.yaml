@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenRouter Delegation"
+  short_description: "Route bounded engineering work externally"
+  default_prompt: "Use $delegate-openrouter to delegate suitable parts of this engineering task."

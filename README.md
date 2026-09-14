@@ -42,6 +42,11 @@ codex-openrouter-mcp
 See `docs/configuration.md` for Codex setup and `SECURITY.md` for the current
 trust boundary.
 
+For skill-guided installation through the repository's Git marketplace, see
+`docs/plugin.md`. The bundled `delegate-openrouter` skill teaches Codex how to
+route work, preserve the parent model's coordination role, verify delegate
+output, and use the approval-gated artifact workflow.
+
 ## Tests
 
 ```bash

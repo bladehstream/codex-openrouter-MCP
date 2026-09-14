@@ -1,0 +1,28 @@
+{
+  "name": "openrouter-delegator",
+  "version": "0.1.0",
+  "description": "Delegate bounded engineering work to approved OpenRouter routes while Codex coordinates and verifies.",
+  "author": {
+    "name": "bladehstream",
+    "url": "https://github.com/bladehstream"
+  },
+  "homepage": "https://github.com/bladehstream/codex-openrouter-MCP",
+  "repository": "https://github.com/bladehstream/codex-openrouter-MCP",
+  "keywords": ["codex", "openrouter", "delegation", "mcp"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "OpenRouter Delegator",
+    "shortDescription": "Route bounded engineering work to approved models.",
+    "longDescription": "Adds secure OpenRouter delegation guidance and a local MCP connection for approved model and provider profiles.",
+    "developerName": "bladehstream",
+    "category": "Productivity",
+    "capabilities": ["Delegation", "Artifact preparation"],
+    "websiteURL": "https://github.com/bladehstream/codex-openrouter-MCP",
+    "defaultPrompt": [
+      "Delegate suitable parts of this engineering task.",
+      "Get an independent high-level review through OpenRouter.",
+      "Prepare this bounded artifact with an approved model."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}
