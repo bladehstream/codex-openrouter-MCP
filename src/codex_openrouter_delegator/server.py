@@ -18,6 +18,7 @@ from . import __version__
 from . import artifacts
 from . import credentials
 from . import routing
+from . import safety
 
 
 PROFILES = routing.ROUTES
@@ -28,9 +29,10 @@ SERVER_INSTRUCTIONS = (
     "Delegate bounded analysis to approved OpenRouter profiles. Use deepseek_high for complex "
     "reasoning and glm_mechanical for narrow mechanical work. Use review_files for explicitly named "
     "large UTF-8 source files under the locked startup root instead of copying them into task text. "
-    "General delegation has no filesystem or shell access. Artifact tools may read only named inert "
-    "text files; commit_artifact creates new files only under artifacts/openrouter after preview and "
-    "hash confirmation. Never send secrets. Use async job tools for long text-only work."
+    "OpenRouter guardrails are managed on the workspace or API key; an optional local scanner is "
+    "disabled unless configured. General delegation has no filesystem or shell access. Artifact tools "
+    "may read only named inert text files; commit_artifact creates new files only after preview and "
+    "hash confirmation. Use async job tools for long text-only work."
 )
 
 
@@ -54,6 +56,7 @@ class Delegator:
 
     def list_profiles(self) -> dict[str, Any]:
         return {
+            "input_safety": safety.status(),
             "profiles": [
                 {
                     "id": profile,
@@ -196,6 +199,9 @@ def perform_task(
     request_timeout: int = 120,
 ) -> dict[str, Any]:
     route = PROFILES[profile]
+    finding = safety.scan_text(task, source="delegation-request")
+    if finding:
+        raise ValueError(f"request blocked by local safety scanner ({finding})")
     key = credentials.load_openrouter_key()
     if artifact_json:
         body: dict[str, Any] = {
@@ -259,6 +265,7 @@ def perform_task(
             if usage.get(key) is not None
         },
         "privacy": {"zdr": True, "data_collection": "deny"},
+        "input_safety": safety.status(),
         "result": result,
     }
     write_audit_record(response, None)
@@ -375,7 +382,7 @@ def tool_definitions() -> list[dict[str, Any]]:
             "input_paths": {
                 "type": "array",
                 "minItems": 1,
-                "maxItems": 20,
+                "maxItems": artifacts.MAX_REVIEW_INPUT_FILES,
                 "items": {"type": "string", "minLength": 1, "maxLength": 500},
             },
             "max_output_tokens": {
@@ -403,8 +410,9 @@ def tool_definitions() -> list[dict[str, Any]]:
         {
             "name": "review_files",
             "description": (
-                "Review 1-20 explicitly named UTF-8 text or source files under the locked workspace "
-                "root, up to 500 KB each and 750 KB combined, with an approved external model."
+                f"Review 1-{artifacts.MAX_REVIEW_INPUT_FILES} explicitly named UTF-8 text or source "
+                "files under the locked workspace root, up to 500 KB each and 750 KB combined, "
+                "with an approved external model."
             ),
             "inputSchema": review_schema,
             "annotations": read_only,

@@ -7,11 +7,13 @@ by the Sol/Astra parent. The external model has no repository, filesystem,
 shell, browser, plugin, or nested-delegation tools.
 
 Inline tasks accept up to 200,000 characters. `review_files` is the preferred
-path for larger reviews: it reads only 1-20 explicitly named UTF-8 text or
+path for larger reviews: it reads only 1-100 explicitly named UTF-8 text or
 source files under the locked workspace root, up to 500 KB per file and 750 KB
-combined. It applies the same traversal, link, sensitive-name, and likely-secret
-checks before transmitting content, and returns the reviewed paths, byte counts,
-and SHA-256 hashes with the model result. It does not grant the model general
+combined. It applies traversal, link, sensitive-name, encoding, and optional
+local-scanner checks before transmitting content, and returns the reviewed paths, byte counts,
+SHA-256 hashes, and input-safety status with the model result. Content scanning
+is handled by OpenRouter guardrails by default. An optional user-supplied local
+scanner can run before transmission. It does not grant the model general
 filesystem access.
 
 ## Artifact delegation
@@ -24,8 +26,23 @@ Artifact generation uses Chat Completions JSON-object mode with deterministic
 sampling. General delegation continues to use the Responses API.
 If the first artifact response contains no unique valid artifact object, the
 server permits one format-repair request. The invalid response is discarded;
-the repair must pass the original path, format, content, size, secret, and hash
-checks. A second invalid response fails closed without writing files.
+the repair must pass the original path, format, content, size, optional local
+scanner, and hash checks. A second invalid response fails closed without writing
+files.
+
+## Content guardrails
+
+Guardrails assigned to the dedicated API key or its OpenRouter workspace apply
+to every delegation. OpenRouter receives the request before these filters run;
+the filters can then flag, redact, or block content before provider forwarding.
+The MCP does not attempt to mirror OpenRouter's maintained rules locally or
+claim that a guardrail is configured.
+
+Local pre-transmission filtering is disabled by default. Set
+`OPENROUTER_SAFETY_SCANNER_MODULE` to a separately installed Python module when
+an organization requires additional endpoint-local controls. The configured
+module is applied to selected inputs and generated artifact content and fails
+closed on load or execution errors. See `safety-scanner.md`.
 
 Preparation stores proposed bytes in memory. `preview_artifact` returns bounded
 excerpts and hashes. `commit_artifact` requires the exact manifest hash and

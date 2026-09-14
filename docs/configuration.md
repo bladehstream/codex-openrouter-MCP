@@ -30,6 +30,9 @@ enabled_tools = [
 [mcp_servers.openrouter_delegator.env]
 OPENROUTER_ARTIFACT_ROOT_MODE = "cwd"
 
+# Optional: a separately installed local pre-transmission scanner module.
+# OPENROUTER_SAFETY_SCANNER_MODULE = "company_codex_scanner"
+
 [mcp_servers.openrouter_delegator.tools.commit_artifact]
 approval_mode = "prompt"
 output_token_limit = 4000
@@ -91,3 +94,10 @@ command = "/home/<user>/.local/share/codex-openrouter-mcp/.venv/bin/python"
 
 For a headless host without Secret Service, inject `OPENROUTER_API_KEY` only
 into the MCP process through a protected service environment or secret manager.
+
+## Content guardrails
+
+Assign the desired OpenRouter guardrail to the dedicated API key or workspace.
+OpenRouter's maintained prompt-injection detector and sensitive-info controls
+then apply before provider forwarding. See `docs/safety-scanner.md` for the
+trust-boundary distinction and the optional local scanner interface.

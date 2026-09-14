@@ -22,7 +22,10 @@
         "discard_artifact",
         "list_artifact_jobs"
       ],
-      "env_vars": ["OPENROUTER_API_KEY"],
+      "env_vars": [
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_SAFETY_SCANNER_MODULE"
+      ],
       "env": {
         "OPENROUTER_ARTIFACT_ROOT_MODE": "cwd"
       },

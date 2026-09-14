@@ -10,6 +10,7 @@ from unittest import mock
 
 
 from codex_openrouter_delegator import artifacts
+from codex_openrouter_delegator import safety
 from codex_openrouter_delegator import server as mcp_server
 
 
@@ -53,9 +54,12 @@ class ArtifactPathTests(unittest.TestCase):
                 artifacts.validate_relative_parts(path)
 
     def test_denies_sensitive_names_case_insensitively(self) -> None:
-        for name in (".env", ".ENV.local", "Secrets.toml", "AUTH.JSON", "client.pem"):
+        for name in (".env", ".ENV.local", "AUTH.JSON", "client.pem"):
             with self.subTest(name=name):
                 self.assertTrue(artifacts.is_denied_name(name))
+        for source_name in ("secrets.py", "credentials.py"):
+            with self.subTest(source_name=source_name):
+                self.assertFalse(artifacts.is_denied_name(source_name))
 
     def test_output_is_top_level_and_inert(self) -> None:
         artifacts.validate_output_name("report.md")
@@ -63,10 +67,18 @@ class ArtifactPathTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(artifacts.ArtifactSecurityError):
                 artifacts.validate_output_name(name)
 
-    def test_secret_detection(self) -> None:
-        self.assertIsNotNone(artifacts.detect_secret("api_key=sk-exampleexampleexample123"))
-        self.assertIsNotNone(artifacts.detect_secret("-----BEGIN PRIVATE KEY-----"))
-        self.assertIsNone(artifacts.detect_secret("ordinary design notes"))
+    def test_default_scanner_does_not_block_credential_handling_code(self) -> None:
+        safe_code = """
+async def refresh(self, token: TokenEnvelope) -> TokenEnvelope: ...
+access_token: str
+refresh_token: str | None = None
+token = _bearer_value(authorization)
+notifier.token = payload.publisher_token
+ADMIN_TOKEN = os.getenv("INKMETER_ADMIN_TOKEN", "")
+NTFY_TOKEN_VAULT_KEY = "ntfy_publisher_token"
+"""
+        with mock.patch.dict(os.environ, {safety.SCANNER_ENV: ""}, clear=False):
+            self.assertIsNone(safety.scan_text(safe_code, source="test.py"))
 
 
 class ArtifactFormatTests(unittest.TestCase):
@@ -95,11 +107,16 @@ class ArtifactFormatTests(unittest.TestCase):
 
 class ReviewInputTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.safety_env = mock.patch.dict(
+            os.environ, {safety.SCANNER_ENV: ""}, clear=False
+        )
+        self.safety_env.start()
         self.temporary = tempfile.TemporaryDirectory()
         self.root = pathlib.Path(self.temporary.name)
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+        self.safety_env.stop()
 
     def test_loads_source_files_with_hash_metadata(self) -> None:
         content = "def example():\n    return 42\n"
@@ -112,14 +129,16 @@ class ReviewInputTests(unittest.TestCase):
         self.assertEqual(metadata[0]["bytes"], len(raw))
         self.assertEqual(len(metadata[0]["sha256"]), 64)
 
-    def test_rejects_secret_binary_and_disallowed_extension(self) -> None:
+    def test_default_policy_allows_credential_code_but_rejects_unsafe_inputs(self) -> None:
         (self.root / "secret.py").write_text(
             "api_key=sk-exampleexampleexample123", encoding="utf-8"
         )
         (self.root / "binary.py").write_bytes(b"safe\x00unsafe")
         (self.root / "invalid.py").write_bytes(b"\xff\xfe")
         (self.root / "archive.zip").write_bytes(b"not really a zip")
-        for name in ("secret.py", "binary.py", "invalid.py", "archive.zip"):
+        _, metadata = artifacts.load_review_inputs(self.root, ["secret.py"])
+        self.assertEqual(metadata[0]["path"], "secret.py")
+        for name in ("binary.py", "invalid.py", "archive.zip"):
             with self.subTest(name=name), self.assertRaises(
                 artifacts.ArtifactSecurityError
             ):
@@ -129,6 +148,17 @@ class ReviewInputTests(unittest.TestCase):
         (self.root / "same.py").write_text("pass\n", encoding="utf-8")
         with self.assertRaises(artifacts.ArtifactSecurityError):
             artifacts.load_review_inputs(self.root, ["same.py", "SAME.py"])
+
+    def test_accepts_100_files_and_rejects_101(self) -> None:
+        names = []
+        for index in range(artifacts.MAX_REVIEW_INPUT_FILES):
+            name = f"file_{index}.py"
+            (self.root / name).write_text(f"value = {index}\n", encoding="utf-8")
+            names.append(name)
+        _, metadata = artifacts.load_review_inputs(self.root, names)
+        self.assertEqual(len(metadata), 100)
+        with self.assertRaises(artifacts.ArtifactSecurityError):
+            artifacts.load_review_inputs(self.root, names + ["one_too_many.py"])
 
     def test_enforces_per_file_and_combined_limits(self) -> None:
         (self.root / "oversize.py").write_text(
@@ -184,6 +214,10 @@ class ReviewInputTests(unittest.TestCase):
 
 class ArtifactStoreTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.safety_env = mock.patch.dict(
+            os.environ, {safety.SCANNER_ENV: ""}, clear=False
+        )
+        self.safety_env.start()
         self.temporary = tempfile.TemporaryDirectory()
         self.root = pathlib.Path(self.temporary.name)
         (self.root / "notes.md").write_text("INPUT_MARKER\n", encoding="utf-8")
@@ -191,6 +225,7 @@ class ArtifactStoreTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+        self.safety_env.stop()
 
     def prepare(self, path: str = "report.md") -> dict:
         return self.store.prepare(
@@ -274,15 +309,26 @@ class ArtifactStoreTests(unittest.TestCase):
         )
         calls = []
         store = artifacts.ArtifactStore(self.root, lambda *args: calls.append(args))
-        with self.assertRaises(artifacts.ArtifactSecurityError):
-            store.prepare(
-                {
-                    "profile": "glm_mechanical",
-                    "task": "test",
-                    "input_paths": ["unsafe.txt"],
-                    "outputs": [{"path": "out.md"}],
-                }
-            )
+        scanner_module = mock.Mock()
+        scanner_module.scan_text.side_effect = (
+            lambda text, *, source: "test credential" if "password=" in text else None
+        )
+        with mock.patch.dict(
+            os.environ, {safety.SCANNER_ENV: "tests.fake_scanner"}, clear=False
+        ), mock.patch.object(
+            safety.importlib, "import_module", return_value=scanner_module
+        ):
+            safety._load_scanner.cache_clear()
+            with self.assertRaises(artifacts.ArtifactSecurityError):
+                store.prepare(
+                    {
+                        "profile": "glm_mechanical",
+                        "task": "test",
+                        "input_paths": ["unsafe.txt"],
+                        "outputs": [{"path": "out.md"}],
+                    }
+                )
+            safety._load_scanner.cache_clear()
         self.assertEqual(calls, [])
 
     def test_concurrent_commit_has_exactly_one_winner(self) -> None:

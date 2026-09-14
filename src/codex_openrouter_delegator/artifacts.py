@@ -17,6 +17,8 @@ import stat
 import threading
 from typing import Any, Callable
 
+from . import safety
+
 
 ALLOWED_EXTENSIONS = {".md", ".txt", ".json", ".csv", ".yaml", ".yml"}
 REVIEW_INPUT_EXTENSIONS = ALLOWED_EXTENSIONS | {
@@ -58,6 +60,7 @@ MAX_INPUT_FILE_BYTES = 1_000_000
 MAX_TOTAL_INPUT_BYTES = 2_000_000
 MAX_REVIEW_FILE_BYTES = 500_000
 MAX_REVIEW_TOTAL_BYTES = 750_000
+MAX_REVIEW_INPUT_FILES = 100
 MAX_OUTPUT_FILE_BYTES = 1_000_000
 MAX_TOTAL_OUTPUT_BYTES = 5_000_000
 WINDOWS_RESERVED = {
@@ -78,21 +81,10 @@ DENIED_NAMES = {
 }
 DENIED_PATTERNS = (
     ".env.*",
-    "secrets.*",
-    "*credential*",
     "*.pem",
     "*.key",
     "*.pfx",
     "*.p12",
-)
-SECRET_PATTERNS = (
-    ("private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
-    ("OpenAI-style key", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b")),
-    ("AWS access key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
-    (
-        "credential assignment",
-        re.compile(r"(?i)\b(password|passwd|api[_-]?key|secret|token)\s*[:=]\s*[^\s]{12,}"),
-    ),
 )
 
 
@@ -158,9 +150,11 @@ class ArtifactStore:
             if b"\x00" in raw:
                 raise ArtifactSecurityError(f"binary input is not allowed: {relative}")
             text = raw.decode("utf-8", errors="strict")
-            secret = detect_secret(text)
-            if secret:
-                raise ArtifactSecurityError(f"blocked likely {secret} in {relative}")
+            finding = safety.scan_text(text, source=f"input:{relative}")
+            if finding:
+                raise ArtifactSecurityError(
+                    f"blocked by local safety scanner ({finding}) in {relative}"
+                )
             input_sections.append(
                 f'<untrusted_input path="{relative}">\n{text}\n</untrusted_input>'
             )
@@ -208,6 +202,7 @@ class ArtifactStore:
                     "elapsed_ms",
                     "usage",
                     "privacy",
+                    "input_safety",
                 )
             },
         )
@@ -335,8 +330,10 @@ def load_review_inputs(
 ) -> tuple[list[str], list[dict[str, object]]]:
     if not isinstance(input_paths, list) or not all(isinstance(p, str) for p in input_paths):
         raise ArtifactSecurityError("input_paths must be an array of strings")
-    if not input_paths or len(input_paths) > 20:
-        raise ArtifactSecurityError("input_paths must contain between 1 and 20 files")
+    if not input_paths or len(input_paths) > MAX_REVIEW_INPUT_FILES:
+        raise ArtifactSecurityError(
+            f"input_paths must contain between 1 and {MAX_REVIEW_INPUT_FILES} files"
+        )
     if len({path.casefold() for path in input_paths}) != len(input_paths):
         raise ArtifactSecurityError("input_paths must be unique case-insensitively")
 
@@ -360,9 +357,11 @@ def load_review_inputs(
             text = raw.decode("utf-8", errors="strict")
         except UnicodeDecodeError as exc:
             raise ArtifactSecurityError(f"input is not valid UTF-8: {relative}") from exc
-        secret = detect_secret(text)
-        if secret:
-            raise ArtifactSecurityError(f"blocked likely {secret} in {relative}")
+        finding = safety.scan_text(text, source=f"review-input:{relative}")
+        if finding:
+            raise ArtifactSecurityError(
+                f"blocked by local safety scanner ({finding}) in {relative}"
+            )
         digest = hashlib.sha256(raw).hexdigest()
         sections.append(
             f"<untrusted_input path={json.dumps(relative)} sha256={json.dumps(digest)}>\n"
@@ -441,13 +440,6 @@ def assert_safe_existing_path(root: pathlib.Path, path: pathlib.Path) -> None:
             raise ArtifactSecurityError("symlinks, junctions, and reparse points are not allowed")
 
 
-def detect_secret(text: str) -> str | None:
-    for name, pattern in SECRET_PATTERNS:
-        if pattern.search(text):
-            return name
-    return None
-
-
 def build_artifact_prompt(
     task: str, requested_paths: list[str], input_sections: list[str]
 ) -> str:
@@ -505,9 +497,11 @@ def validate_generated_files(
         validate_output_name(path)
         if "\x00" in content:
             raise ArtifactSecurityError("generated output contains NUL bytes")
-        secret = detect_secret(content)
-        if secret:
-            raise ArtifactSecurityError(f"generated output contains likely {secret}")
+        finding = safety.scan_text(content, source=f"generated-output:{path}")
+        if finding:
+            raise ArtifactSecurityError(
+                f"generated output blocked by local safety scanner ({finding})"
+            )
         validate_content(path, content)
         raw = content.encode("utf-8")
         if len(raw) > MAX_OUTPUT_FILE_BYTES:

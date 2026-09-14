@@ -7,6 +7,7 @@ import unittest
 from unittest import mock
 
 from codex_openrouter_delegator import server
+from codex_openrouter_delegator import safety
 
 
 class McpProtocolTests(unittest.TestCase):
@@ -21,7 +22,7 @@ class McpProtocolTests(unittest.TestCase):
             }
         )
         self.assertEqual(initialized["result"]["protocolVersion"], "2025-06-18")
-        self.assertEqual(initialized["result"]["serverInfo"]["version"], "0.2.0")
+        self.assertEqual(initialized["result"]["serverInfo"]["version"], "0.2.1")
         listed = mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         tools = {tool["name"]: tool for tool in listed["result"]["tools"]}
         self.assertEqual(len(tools), 13)
@@ -31,6 +32,10 @@ class McpProtocolTests(unittest.TestCase):
         self.assertEqual(
             tools["delegate_task"]["inputSchema"]["properties"]["task"]["maxLength"],
             200_000,
+        )
+        self.assertEqual(
+            tools["review_files"]["inputSchema"]["properties"]["input_paths"]["maxItems"],
+            100,
         )
 
     def test_unknown_profile_fails_before_network(self) -> None:
@@ -47,6 +52,14 @@ class McpProtocolTests(unittest.TestCase):
             }
         )
         self.assertIn("unknown profile", response["error"]["message"])
+
+    def test_profile_catalog_discloses_local_scanner_status(self) -> None:
+        with mock.patch.dict(
+            os.environ, {safety.SCANNER_ENV: ""}, clear=False
+        ):
+            catalog = server.Delegator().list_profiles()
+        self.assertFalse(catalog["input_safety"]["local_scanner_enabled"])
+        self.assertIn("OpenRouter", catalog["input_safety"]["boundary"])
 
     def test_cwd_root_mode_is_explicit_and_rejects_home(self) -> None:
         with tempfile.TemporaryDirectory() as raw_dir, mock.patch.dict(

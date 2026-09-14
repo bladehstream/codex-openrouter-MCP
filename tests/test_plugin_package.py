@@ -37,6 +37,7 @@ class PluginPackageTests(unittest.TestCase):
         self.assertEqual(server["env"]["OPENROUTER_ARTIFACT_ROOT_MODE"], "cwd")
         self.assertEqual(server["tools"]["commit_artifact"]["approval_mode"], "prompt")
         self.assertIn("OPENROUTER_API_KEY", server["env_vars"])
+        self.assertIn("OPENROUTER_SAFETY_SCANNER_MODULE", server["env_vars"])
         self.assertIn("review_files", server["enabled_tools"])
         self.assertEqual(server["tools"]["review_files"]["output_token_limit"], 16000)
 

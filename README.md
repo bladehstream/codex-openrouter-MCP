@@ -16,8 +16,10 @@ and prevents routing outside the configured provider list.
 ## Capabilities
 
 - synchronous delegation;
-- selected-file review for UTF-8 source and text files up to 500 KB each and
-  750 KB combined;
+- selected-file review for up to 100 UTF-8 source and text files, limited to
+  500 KB each and 750 KB combined;
+- OpenRouter workspace/API-key guardrails by default, with an optional
+  user-supplied local pre-transmission scanner module;
 - in-memory asynchronous jobs, status, follow-up, result, and cancellation;
 - selected-file artifact preparation;
 - in-memory artifact preview with SHA-256 manifests;
