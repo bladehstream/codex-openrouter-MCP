@@ -1,13 +1,15 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "codex-openrouter-mcp"
-version = "0.4.0"
+version = "0.4.1"
 description = "Secure local MCP delegation from Codex to approved OpenRouter models"
 readme = "README.md"
 requires-python = ">=3.11"
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE.md"]
 authors = [{ name = "bladehstream" }]
 classifiers = [
   "Development Status :: 3 - Alpha",

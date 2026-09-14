@@ -8,7 +8,7 @@ approval-gated inert text artifacts. It is not yet a general external coding
 agent runtime and is not ready for submission to the universal Codex plugin
 directory.
 
-Status as of v0.4.0:
+Status as of v0.4.1:
 
 - The repository owner has made the GitHub repository public. Repository
   visibility is permanently treated as a human-only action for automated agents;
@@ -19,16 +19,18 @@ Status as of v0.4.0:
 - Novita and SiliconFlow are implemented as DeepSeek last-resort providers but
   remain blocked by the current dedicated key's OpenRouter guardrail until its
   provider allowlist is updated.
-- No open-source license has been selected. Public visibility alone does not
-  grant permission to use, modify, or redistribute the code.
+- The project is source-available under PolyForm Noncommercial 1.0.0. Commercial
+  use is not granted by the public license.
 
 ## P0: public repository hygiene and immediate safety
 
 - [x] Codify an absolute agent prohibition on changing repository visibility.
-- [ ] Select and add an explicit license. Apache-2.0 is preferred for its patent
-  grant; MIT is the simpler alternative.
-- [ ] Add a prominent warranty/liability notice appropriate to the selected
-  license and public-alpha status.
+- [x] Add PolyForm Noncommercial 1.0.0 and publish matching SPDX package/plugin
+  metadata.
+- [x] Add the license's warranty/liability terms and a prominent public-alpha
+  licensing summary.
+- [ ] Add contributor terms or a CLA before accepting substantive external
+  contributions if future commercial dual licensing is desired.
 - [ ] Enable GitHub private vulnerability reporting and document the exact
   reporting path.
 - [ ] Run Gitleaks or TruffleHog against the complete Git history before the

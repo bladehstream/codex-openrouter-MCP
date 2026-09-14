@@ -31,7 +31,7 @@
       ],
       "env": {
         "OPENROUTER_ARTIFACT_ROOT_MODE": "cwd",
-        "OPENROUTER_PLUGIN_BASE_VERSION": "0.4.0"
+        "OPENROUTER_PLUGIN_BASE_VERSION": "0.4.1"
       },
       "tools": {
         "commit_artifact": {

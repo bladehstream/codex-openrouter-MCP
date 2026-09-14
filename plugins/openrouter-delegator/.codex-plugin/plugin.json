@@ -1,6 +1,6 @@
 {
   "name": "openrouter-delegator",
-  "version": "0.4.0+codex.20260914070541",
+  "version": "0.4.1+codex.20260914092335",
   "description": "Delegate bounded engineering work to approved OpenRouter routes while Codex coordinates and verifies.",
   "author": {
     "name": "bladehstream",
@@ -8,6 +8,7 @@
   },
   "homepage": "https://github.com/bladehstream/codex-openrouter-MCP",
   "repository": "https://github.com/bladehstream/codex-openrouter-MCP",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": [
     "codex",
     "openrouter",

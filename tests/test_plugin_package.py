@@ -1,3 +1,4 @@
+import hashlib
 import json
 import pathlib
 import re
@@ -45,6 +46,12 @@ class PluginPackageTests(unittest.TestCase):
         self.assertEqual(plugin_base_version, project_version)
         self.assertEqual(configured_version, project_version)
         self.assertEqual(
+            project["project"]["license"], "PolyForm-Noncommercial-1.0.0"
+        )
+        self.assertEqual(
+            manifest["license"], "PolyForm-Noncommercial-1.0.0"
+        )
+        self.assertEqual(
             project["project"]["scripts"]["codex-openrouter-routes"],
             "codex_openrouter_delegator.route_config:main",
         )
@@ -53,6 +60,13 @@ class PluginPackageTests(unittest.TestCase):
             project["tool"]["setuptools"]["package-data"][
                 "codex_openrouter_delegator"
             ],
+        )
+
+    def test_license_matches_canonical_polyform_1_0_0(self):
+        license_bytes = (ROOT / "LICENSE.md").read_bytes()
+        self.assertEqual(
+            hashlib.sha256(license_bytes).hexdigest(),
+            "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
         )
 
     def test_mcp_uses_portable_entrypoint_and_gates_writes(self):
@@ -68,7 +82,7 @@ class PluginPackageTests(unittest.TestCase):
         self.assertIn("review_files", server["enabled_tools"])
         self.assertIn("start_file_review", server["enabled_tools"])
         self.assertEqual(server["tools"]["review_files"]["output_token_limit"], 16000)
-        self.assertEqual(server["env"]["OPENROUTER_PLUGIN_BASE_VERSION"], "0.4.0")
+        self.assertEqual(server["env"]["OPENROUTER_PLUGIN_BASE_VERSION"], "0.4.1")
 
     def test_skill_references_are_bundled(self):
         skill = (SKILL_ROOT / "SKILL.md").read_text()

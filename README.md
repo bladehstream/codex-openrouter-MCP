@@ -4,8 +4,9 @@
 > by OpenAI, OpenRouter, DeepSeek, Z.ai, or any listed inference provider. It is
 > not submitted to the universal Codex plugin directory. Review the
 > [security policy](SECURITY.md) and [outstanding roadmap](TODO.md) before use.
-> No open-source license has been selected yet; public visibility does not grant
-> permission to use, modify, or redistribute the code.
+> The project is source-available under the
+> [PolyForm Noncommercial License 1.0.0](LICENSE.md), not an OSI-approved
+> open-source license. Commercial use requires separate permission.
 
 A local, security-focused STDIO MCP server that lets a Sol or Astra Codex parent
 delegate bounded work to explicitly approved OpenRouter model/provider routes.
@@ -67,6 +68,18 @@ For skill-guided installation through the repository's Git marketplace, see
 [plugin installation](docs/plugin.md). The bundled `delegate-openrouter` skill
 teaches Codex how to route work, preserve the parent model's coordination role,
 verify delegate output, and use the approval-gated artifact workflow.
+
+## License
+
+This project is licensed under the
+[PolyForm Noncommercial License 1.0.0](LICENSE.md), SPDX identifier
+`PolyForm-Noncommercial-1.0.0`. It permits use, modification, and distribution
+for noncommercial purposes defined by that license. It does not grant commercial
+use. For commercial licensing enquiries, contact the repository owner through
+[the bladehstream GitHub profile](https://github.com/bladehstream).
+
+The canonical license text controls. This summary is provided only for
+convenience and does not modify the license.
 
 ## Tests
 

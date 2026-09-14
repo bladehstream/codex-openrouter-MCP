@@ -22,7 +22,7 @@ class McpProtocolTests(unittest.TestCase):
             }
         )
         self.assertEqual(initialized["result"]["protocolVersion"], "2025-06-18")
-        self.assertEqual(initialized["result"]["serverInfo"]["version"], "0.4.0")
+        self.assertEqual(initialized["result"]["serverInfo"]["version"], "0.4.1")
         listed = mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         tools = {tool["name"]: tool for tool in listed["result"]["tools"]}
         self.assertEqual(len(tools), 14)
@@ -60,7 +60,7 @@ class McpProtocolTests(unittest.TestCase):
             {
                 safety.SCANNER_ENV: "",
                 safety.EXPECTED_GUARDRAIL_ENV: "expected-policy",
-                "OPENROUTER_PLUGIN_BASE_VERSION": "0.4.0",
+                "OPENROUTER_PLUGIN_BASE_VERSION": "0.4.1",
             },
             clear=False,
         ):
@@ -70,7 +70,7 @@ class McpProtocolTests(unittest.TestCase):
         self.assertEqual(
             catalog["input_safety"]["guardrail_status"], "configured_unverified"
         )
-        self.assertEqual(catalog["runtime"]["server_version"], "0.4.0")
+        self.assertEqual(catalog["runtime"]["server_version"], "0.4.1")
         self.assertTrue(catalog["runtime"]["versions_match"])
         deepseek = next(
             profile
