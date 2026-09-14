@@ -83,7 +83,7 @@ class PluginPackageTests(unittest.TestCase):
                 self.assertNotIn("[TODO:", path.read_text(encoding="utf-8"))
 
     def test_documentation_relative_links_resolve(self):
-        markdown_files = [ROOT / "README.md", ROOT / "SECURITY.md"]
+        markdown_files = list(ROOT.glob("*.md"))
         markdown_files.extend((ROOT / "docs").glob("*.md"))
         markdown_files.extend((PLUGIN_ROOT / "skills").rglob("*.md"))
         link_pattern = re.compile(r"(?<!!)\[[^]]+\]\(([^)]+)\)")

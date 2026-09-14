@@ -67,7 +67,18 @@ tests.
 
 ## Reporting
 
-Keep this repository private during the alpha security review. Report suspected
-path escapes, credential exposure, unapproved routing, overwrite behavior, or
-command execution directly to the repository owner rather than opening a public
-issue containing sensitive details.
+This repository is a public alpha, not a security certification or a universal
+Codex plugin directory submission. Report suspected path escapes, credential
+exposure, unapproved routing, overwrite behavior, or command execution through
+GitHub private vulnerability reporting when available. Otherwise contact the
+repository owner privately through GitHub. Never place secrets, exploit details,
+or sensitive source content in a public issue.
+
+Repository visibility is a human-only governance decision. Automated agents
+working in this repository are explicitly prohibited from changing it; see
+`AGENTS.md`.
+
+Unrestricted repository writes, arbitrary shell execution, primary-checkout
+patching, and automatic deployment are intentionally out of scope. The
+[outstanding roadmap](TODO.md) defines the capability gates required before
+those permissions or directory submission are considered.

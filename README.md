@@ -1,5 +1,12 @@
 # Codex OpenRouter MCP
 
+> **Unofficial public alpha.** This project is not affiliated with or endorsed
+> by OpenAI, OpenRouter, DeepSeek, Z.ai, or any listed inference provider. It is
+> not submitted to the universal Codex plugin directory. Review the
+> [security policy](SECURITY.md) and [outstanding roadmap](TODO.md) before use.
+> No open-source license has been selected yet; public visibility does not grant
+> permission to use, modify, or redistribute the code.
+
 A local, security-focused STDIO MCP server that lets a Sol or Astra Codex parent
 delegate bounded work to explicitly approved OpenRouter model/provider routes.
 
@@ -75,6 +82,7 @@ uv run python tests/live_acceptance.py
 
 ## Status
 
-Alpha. Inline delegation, bounded selected-file review, and inert text artifacts
-are implemented and tested. Near-native repository exploration, patching,
-worktrees, and test execution are planned as separately gated capabilities.
+Public alpha. Inline delegation, bounded selected-file review, and inert text
+artifacts are implemented and tested. Near-native repository exploration,
+patching, worktrees, and test execution remain separately gated work. See
+[TODO.md](TODO.md) for the complete roadmap and directory-readiness criteria.
